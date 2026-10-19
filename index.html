@@ -239,16 +239,20 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .load-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--hair-faint)}
 .load-row:last-child{border-bottom:0}
 .load-row b{font:400 12px var(--f-mono);color:var(--white)}
-.photo{position:relative;margin:0 -16px -14px;border-radius:0 0 14px 14px;overflow:hidden;aspect-ratio:4/5;background:var(--glass-low)}
-.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .6s ease}
+.widget.photo-card{padding:0;overflow:hidden}
+.photo{position:relative;border-radius:inherit;overflow:hidden;aspect-ratio:4/5;background:var(--glass-low)}
+/* two stacked layers: the incoming photo fades in over the outgoing one, then settles from a slight zoom */
+.ph-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.045);transition:opacity 1.4s cubic-bezier(.4,0,.2,1),transform 7s cubic-bezier(.2,.6,.3,1)}
+.ph-layer.on{opacity:1;transform:scale(1)}
+.photo-add{position:absolute;top:10px;right:10px;z-index:3;font-size:11.5px;font-weight:500;padding:4px 11px;border:0;border-radius:99px;background:var(--tooltip);color:var(--ink);cursor:pointer;opacity:0;transition:opacity .2s ease}
+.photo:hover .photo-add,.photo-add:focus-visible{opacity:1}
+@media (hover:none){.photo-add{opacity:1}}
 .photo-tools{position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:6px}
 .photo-dots{display:flex;gap:5px}
 .photo-dots button{width:7px;height:7px;padding:0;border-radius:50%;border:0;background:rgba(255,255,255,.45);cursor:pointer}
 .photo-dots button[aria-current="true"]{background:var(--white)}
 .photo-tools .icon-btn{background:var(--tooltip);color:var(--ink)}
 .photo-actions{display:flex;gap:4px}
-.wlabel-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-.wlabel-row .wlabel{margin:0}
 .link-btn{font-size:11.5px;color:var(--fog);background:none;border:0;padding:0;cursor:pointer}
 .link-btn:hover{text-decoration:underline}
 
@@ -352,7 +356,7 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
   <aside class="side" id="side" aria-label="At a glance">
     <div class="widget glass" id="w-countdown"></div>
     <div class="widget glass fog" id="w-money"></div>
-    <div class="widget glass" id="w-photos"></div>
+    <div class="widget glass photo-card" id="w-photos"></div>
     <div class="widget glass" id="w-week"></div>
     <div class="widget glass" id="w-load"></div>
   </aside>
@@ -434,6 +438,7 @@ const state = {
 let db = null, mcp = null, assets = null, uid = null;
 let mailUnwatch = null, mailQuery = null, mailInput = null;
 let animateDash = false;
+let photoSignature = "", photoShown = "", photoLayer = 0;
 
 try { state.me = localStorage.getItem("wedding-hq:me") || ""; } catch (e) {}
 
@@ -968,19 +973,40 @@ function renderPhotos() {
   const canAdd = !!assets && !!db && state.canWrite;
   const canStyle = !!db && state.canWrite;
   if (state.photoIndex >= photos.length) state.photoIndex = 0;
+
+  // Build the frame once per photo set, so renders only swap the controls and never interrupt a fade.
+  const signature = photos.map((p) => p.key).join("|") + `/${canAdd}/${canStyle}`;
+  if (signature !== photoSignature) {
+    photoSignature = signature; photoShown = ""; photoLayer = 0;
+    el.innerHTML = `<div class="photo"><img class="ph-layer" alt=""><img class="ph-layer" alt="">
+      ${canAdd ? `<button class="photo-add" data-action="add-photos">Add photo</button>` : ""}
+      <div class="photo-tools"><div class="photo-dots"></div><div class="photo-actions"></div></div></div>`;
+    photos.forEach((p) => { new Image().src = p.src; });   // warm the cache so fades never wait on the network
+  }
+
   const p = photos[state.photoIndex];
   const isBg = state.settings.background === p.key;
-  const tools = canStyle ? `<div class="photo-actions">
-      <button class="icon-btn" data-action="set-bg" data-id="${esc(p.key)}" aria-label="${isBg ? "Go back to the redwoods background" : "Use this photo as the background"}" aria-pressed="${isBg}">${ICON.image}</button>
-      ${p.uploaded ? `<button class="icon-btn" data-action="delete-photo" data-id="${esc(p.id)}" aria-label="Remove photo">${ICON.close}</button>` : ""}
-    </div>` : "";
-  el.innerHTML = `<div class="wlabel-row"><p class="wlabel">Our photos</p>${canAdd ? `<button class="link-btn" data-action="add-photos">Add</button>` : ""}</div>
-    <div class="photo"><img src="${esc(p.src)}" alt="${esc(p.caption || "Rachel and Xavier")}" style="object-position:${p.focus}">
-      <div class="photo-tools">
-        <div class="photo-dots">${photos.map((_, i) => `<button data-action="photo" data-id="${i}" aria-label="Photo ${i + 1} of ${photos.length}" aria-current="${i === state.photoIndex}"></button>`).join("")}</div>
-        ${tools}
-      </div>
-    </div>`;
+  el.querySelector(".photo-dots").innerHTML = photos.map((_, i) => `<button data-action="photo" data-id="${i}" aria-label="Photo ${i + 1} of ${photos.length}" aria-current="${i === state.photoIndex}"></button>`).join("");
+  el.querySelector(".photo-actions").innerHTML = canStyle
+    ? `<button class="icon-btn" data-action="set-bg" data-id="${esc(p.key)}" aria-label="${isBg ? "Go back to the redwoods background" : "Use this photo as the background"}" aria-pressed="${isBg}">${ICON.image}</button>
+       ${p.uploaded ? `<button class="icon-btn" data-action="delete-photo" data-id="${esc(p.id)}" aria-label="Remove photo">${ICON.close}</button>` : ""}`
+    : "";
+  if (photoShown !== p.key) showPhoto(p);
+}
+
+async function showPhoto(p) {
+  photoShown = p.key;
+  const layers = $("#w-photos").querySelectorAll(".ph-layer");
+  const incoming = layers[1 - photoLayer], outgoing = layers[photoLayer];
+  incoming.src = p.src;
+  incoming.alt = p.caption || "Rachel and Xavier";
+  incoming.style.objectPosition = p.focus;
+  try { await incoming.decode(); } catch (e) {}
+  if (photoShown !== p.key || !incoming.isConnected) return;   // a newer photo was picked meanwhile
+  incoming.classList.add("on");
+  outgoing.classList.remove("on");
+  outgoing.alt = "";
+  photoLayer = 1 - photoLayer;
 }
 
 /* ===================== render ===================== */
