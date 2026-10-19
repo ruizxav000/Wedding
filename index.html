@@ -247,7 +247,6 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .photo-dots button[aria-current="true"]{background:var(--white)}
 .photo-tools .icon-btn{background:var(--tooltip);color:var(--ink)}
 .photo-actions{display:flex;gap:4px}
-.photo-empty{font-size:12px;color:var(--mute);display:flex;flex-direction:column;gap:10px;align-items:flex-start}
 .wlabel-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .wlabel-row .wlabel{margin:0}
 .link-btn{font-size:11.5px;color:var(--fog);background:none;border:0;padding:0;cursor:pointer}
@@ -458,6 +457,19 @@ const personColor = (key) => (PEOPLE[key] ? PEOPLE[key].color : UNASSIGNED_COLOR
 const viewerName = () => (PEOPLE[state.me] ? PEOPLE[state.me].name : "you two");
 const partOfDay = () => { const h = new Date().getHours(); return h < 12 ? "morning" : h < 18 ? "afternoon" : "evening"; };
 const photoUrl = (assetId) => "/_blob/" + encodeURIComponent(assetId);
+
+// The engagement photos ship with the page. Photos added in the album join them.
+// `key` is what settings.background stores: a built-in id, or an uploaded asset id.
+const BUILTIN_PHOTOS = [
+  { key: "builtin-proposal", src: "photos/proposal.jpg", caption: "The proposal, under the red maple", focus: "42% 68%" },
+  { key: "builtin-harbor", src: "photos/harbor.jpg", caption: "Rachel and Xavier on the Boston waterfront", focus: "50% 58%" },
+  { key: "builtin-ring", src: "photos/ring.jpg", caption: "Rachel's ring", focus: "50% 45%" },
+  { key: "builtin-hands", src: "photos/hands.jpg", caption: "Holding hands", focus: "50% 50%" },
+];
+const allPhotos = () => [
+  ...BUILTIN_PHOTOS,
+  ...state.photos.map((p) => ({ key: p.asset, id: p.id, src: photoUrl(p.asset), caption: p.caption, focus: "50% 50%", uploaded: true })),
+];
 
 function byDue(a, b) {
   const da = a.due || "9999", dbb = b.due || "9999";
@@ -952,22 +964,21 @@ function renderSide() {
 
 function renderPhotos() {
   const el = $("#w-photos");
-  const photos = state.photos;
+  const photos = allPhotos();
   const canAdd = !!assets && !!db && state.canWrite;
-  if (!photos.length) {
-    el.hidden = !canAdd;
-    el.innerHTML = `<p class="wlabel">Our photos</p><hr class="wdiv"><div class="photo-empty"><span>Add a few favorites. They rotate here, and any one can become the background.</span><button class="btn small" data-action="add-photos">Add photos</button></div>`;
-    return;
-  }
-  el.hidden = false;
+  const canStyle = !!db && state.canWrite;
   if (state.photoIndex >= photos.length) state.photoIndex = 0;
   const p = photos[state.photoIndex];
-  const isBg = state.settings.background === p.asset;
+  const isBg = state.settings.background === p.key;
+  const tools = canStyle ? `<div class="photo-actions">
+      <button class="icon-btn" data-action="set-bg" data-id="${esc(p.key)}" aria-label="${isBg ? "Go back to the redwoods background" : "Use this photo as the background"}" aria-pressed="${isBg}">${ICON.image}</button>
+      ${p.uploaded ? `<button class="icon-btn" data-action="delete-photo" data-id="${esc(p.id)}" aria-label="Remove photo">${ICON.close}</button>` : ""}
+    </div>` : "";
   el.innerHTML = `<div class="wlabel-row"><p class="wlabel">Our photos</p>${canAdd ? `<button class="link-btn" data-action="add-photos">Add</button>` : ""}</div>
-    <div class="photo"><img src="${photoUrl(p.asset)}" alt="${esc(p.caption || "Rachel and Xavier")}">
+    <div class="photo"><img src="${esc(p.src)}" alt="${esc(p.caption || "Rachel and Xavier")}" style="object-position:${p.focus}">
       <div class="photo-tools">
-        <div class="photo-dots">${photos.length > 1 ? photos.map((_, i) => `<button data-action="photo" data-id="${i}" aria-label="Photo ${i + 1}" aria-current="${i === state.photoIndex}"></button>`).join("") : ""}</div>
-        ${canAdd ? `<div class="photo-actions"><button class="icon-btn" data-action="set-bg" data-id="${esc(p.asset)}" aria-label="${isBg ? "Use the lake photo as background" : "Use this photo as background"}" aria-pressed="${isBg}">${ICON.image}</button><button class="icon-btn" data-action="delete-photo" data-id="${esc(p.id)}" aria-label="Remove photo">${ICON.close}</button></div>` : ""}
+        <div class="photo-dots">${photos.map((_, i) => `<button data-action="photo" data-id="${i}" aria-label="Photo ${i + 1} of ${photos.length}" aria-current="${i === state.photoIndex}"></button>`).join("")}</div>
+        ${tools}
       </div>
     </div>`;
 }
@@ -1244,16 +1255,15 @@ async function deletePhoto(id) {
   if (assets) assets.delete(p.asset).catch(() => {});
 }
 
-function setBackground(assetId) {
+function setBackground(key) {
   if (!canWriteNow()) return;
-  const next = state.settings.background === assetId ? "" : assetId;
-  save(db.doc("settings/main").set({ ...state.settings, background: next }), next ? "Background updated" : "Back to the lake");
+  const next = state.settings.background === key ? "" : key;
+  save(db.doc("settings/main").set({ ...state.settings, background: next }), next ? "Background updated" : "Back to the redwoods");
 }
 
 function applyBackground() {
-  const a = state.settings.background;
-  const valid = a && state.photos.some((p) => p.asset === a);
-  $("#scene").style.backgroundImage = valid ? `var(--scrim), url("${photoUrl(a)}")` : "";
+  const chosen = allPhotos().find((p) => p.key && p.key === state.settings.background);
+  $("#scene").style.backgroundImage = chosen ? `var(--scrim), url("${chosen.src}")` : "";
 }
 
 /* ---------- Gmail ---------- */
@@ -1468,8 +1478,8 @@ $("#side").addEventListener("mouseleave", startCycle);
 
 // photos rotate on their own, slower than the widgets
 setInterval(() => {
-  if (document.hidden || state.photos.length < 2 || $("#w-photos").matches(":hover")) return;
-  state.photoIndex = (state.photoIndex + 1) % state.photos.length;
+  if (document.hidden || $("#side").hidden || $("#w-photos").matches(":hover")) return;
+  state.photoIndex = (state.photoIndex + 1) % allPhotos().length;
   renderPhotos();
 }, 9000);
 
