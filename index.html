@@ -54,17 +54,16 @@ a{color:var(--fog)}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 option{background:var(--menu);color:var(--ink)}
 
-.bg-scene{position:fixed;inset:0;z-index:-1;background-image:var(--scrim),url("bg.jpg");background-size:cover;background-position:center;transform-origin:50% 40%;will-change:transform}
+.bg-scene{position:fixed;inset:0;z-index:-1;background-image:var(--scrim),url("bg.jpg");background-size:cover;background-position:center}
 
 /* ---------- chrome ---------- */
 .chrome{position:fixed;top:0;left:0;right:0;z-index:100;transition:box-shadow .3s ease}
 .chrome.scrolled{box-shadow:0 1px 0 var(--hair)}
-/* Once scrolled, the bar is dark frosted glass made from its own blurred copy of the photo, not from what
-   scrolls behind it, so it reads like a frosted bar while cards underneath stay fully hidden. */
-.chrome-bg{position:absolute;inset:0;overflow:hidden;opacity:0;transition:opacity .3s ease;pointer-events:none;background:var(--page)}
+/* Frosted glass without live blur: surfaces show their slice of a pre-blurred copy of the photo, pinned to the
+   screen (background-attachment: fixed). Live backdrop-filter made Chrome leave rectangular patches wherever the
+   page repainted. Fixed backgrounds stop pinning on transformed elements, so glass surfaces are never transformed. */
+.chrome-bg{position:absolute;inset:0;opacity:0;transition:opacity .3s ease;pointer-events:none;background:linear-gradient(var(--chrome),var(--chrome)) fixed,var(--scrim) fixed,url("bg-blur.jpg") center/cover no-repeat fixed,var(--page)}
 .chrome.scrolled .chrome-bg{opacity:1}
-.chrome-scene{position:absolute;top:-40px;left:-40px;right:-40px;height:calc(100vh + 80px);background-image:var(--scrim),url("bg.jpg");background-size:cover;background-position:center;filter:blur(20px) saturate(160%)}
-.chrome-bg::after{content:"";position:absolute;inset:0;background:var(--chrome)}
 .chrome-inner{position:relative}
 .chrome-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:16px;padding-left:max(var(--gutter),env(safe-area-inset-left,0px));padding-right:max(var(--gutter),env(safe-area-inset-right,0px))}
 .brand{font:italic 500 1.8rem/1 var(--f-script);color:var(--ink);white-space:nowrap;letter-spacing:.01em}
@@ -97,12 +96,11 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .sh-meta button{margin-left:6px}
 
 /* ---------- liquid glass ---------- */
-/* each frosted surface gets its own GPU layer; without it Chrome can leave hard seams in the blur while the background zooms */
-.glass,.kpi{position:relative;background:var(--glass);border-radius:14px;backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);transform:translateZ(0);backface-visibility:hidden}
-.glass.gold{background:var(--tint-gold)}
-.glass.gold:hover{background:var(--tint-gold-hi)}
-.glass.fog{background:var(--tint-fog)}
-.glass.quiet{background:var(--glass-quiet);backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%)}
+.glass,.kpi{--tint:var(--glass);position:relative;border-radius:14px;background:linear-gradient(var(--tint),var(--tint)) fixed,var(--scrim) fixed,url("bg-blur.jpg") center/cover no-repeat fixed,var(--page)}
+.glass.gold{--tint:var(--tint-gold)}
+.glass.gold:hover{--tint:var(--tint-gold-hi)}
+.glass.fog{--tint:var(--tint-fog)}
+.glass.quiet{--tint:var(--glass-quiet)}
 
 /* ---------- shared bits ---------- */
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -258,8 +256,8 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 
 /* ---------- dashboard ---------- */
 .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:10px 0 14px}
-.kpi{background:rgba(255,255,255,.08);padding:16px 18px;min-width:0;overflow:hidden;transition:background .15s}
-.kpi:hover{background:var(--glass-hi)}
+.kpi{--tint:rgba(255,255,255,.08);padding:16px 18px;min-width:0;overflow:hidden}
+.kpi:hover{--tint:var(--glass-hi)}
 .kpi-lbl{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--lichen);margin-bottom:6px}
 .kpi-val{font-size:1.9rem;font-weight:600;line-height:1;letter-spacing:-.02em;color:var(--white);font-variant-numeric:tabular-nums;white-space:nowrap}
 .kpi-sub{font-size:10.5px;color:var(--mute-faint);margin-top:5px}
@@ -301,13 +299,13 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .dt .num{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
 
 /* ---------- overlays ---------- */
-#tooltip{position:fixed;z-index:300;pointer-events:none;min-width:150px;padding:10px 14px;border-radius:12px;background:var(--tooltip);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 10px 40px rgba(0,0,0,.48)}
+#tooltip{position:fixed;z-index:300;pointer-events:none;min-width:150px;padding:10px 14px;border-radius:12px;background:var(--tooltip);border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 10px 40px rgba(0,0,0,.48)}
 .tt-title{font-size:13px;font-weight:600;color:var(--white);margin-bottom:6px}
 .tt-body{display:flex;align-items:center;gap:7px}
 .tt-dot{width:9px;height:9px;border-radius:2px}
 .tt-val{font:400 12px var(--f-mono);color:var(--ink)}
 .tt-pct{font:400 11px var(--f-mono);color:var(--mute);margin-left:4px}
-#toast{position:fixed;left:50%;top:calc(84px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:250;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);padding:8px 8px 8px 16px;border-radius:99px;background:var(--tooltip);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 10px 40px rgba(0,0,0,.4);font-size:13px;color:var(--ink)}
+#toast{position:fixed;left:50%;top:calc(84px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:250;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);padding:8px 8px 8px 16px;border-radius:99px;background:var(--tooltip);border:1px solid rgba(255,255,255,.14);box-shadow:0 10px 40px rgba(0,0,0,.4);font-size:13px;color:var(--ink)}
 #toast .dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--fern)}
 #toast.bad .dot{background:var(--alert)}
 #toast .msg{padding-right:8px}
@@ -340,7 +338,7 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 <div class="bg-scene" id="scene"></div>
 
 <header class="chrome" id="chrome">
-  <div class="chrome-bg" aria-hidden="true"><div class="chrome-scene"></div></div>
+  <div class="chrome-bg" aria-hidden="true"></div>
   <div class="chrome-inner">
     <span class="brand">Rachel <span>&amp;</span> Xavier</span>
     <nav class="app-tabs" id="tabs" aria-label="Sections"></nav>
@@ -1344,13 +1342,12 @@ document.addEventListener("submit", async (e) => {
   render();
 });
 
-/* ---------- scroll: cover the bar, slowly zoom the photo ---------- */
+/* ---------- scroll: cover the bar ---------- */
 
 let ticking = false;
 function onScroll() {
   const y = scrollY || 0;
   $("#chrome").classList.toggle("scrolled", y > 10);
-  if (!REDUCED_MOTION) $("#scene").style.transform = `scale(${1 + (Math.min(y, 700) / 700) * 0.12})`;
   ticking = false;
 }
 addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
@@ -1369,9 +1366,10 @@ function cycleWidgets() {
   setTimeout(() => {
     const before = rest.map((el) => el.getBoundingClientRect().top);
     side.appendChild(top);
-    rest.forEach((el, i) => { el.style.transition = "none"; el.style.transform = `translateY(${before[i] - el.getBoundingClientRect().top}px)`; });
+    // slide with `top` (they're position:relative), not a transform, so their pinned glass background stays aligned
+    rest.forEach((el, i) => { el.style.transition = "none"; el.style.top = `${before[i] - el.getBoundingClientRect().top}px`; });
     void side.offsetHeight;
-    rest.forEach((el) => { el.style.transition = "transform .5s cubic-bezier(.4,0,.2,1)"; el.style.transform = ""; });
+    rest.forEach((el) => { el.style.transition = "top .5s cubic-bezier(.4,0,.2,1)"; el.style.top = ""; });
     setTimeout(() => {
       top.style.transition = "opacity .35s ease";
       top.style.opacity = "";
