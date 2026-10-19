@@ -11,7 +11,7 @@
   --page:#0D1610;
   --page-grad:linear-gradient(150deg,#0E1C14 0%,#17201A 55%,#261B12 100%);
   --scrim:linear-gradient(180deg,rgba(8,13,9,.64) 0%,rgba(8,13,9,.76) 100%);
-  --chrome:rgba(9,15,10,.22);
+  --chrome:rgba(9,15,10,.58);
   --ink:#F2F0E6;
   --ink-soft:rgba(242,240,230,.78);
   --white:#FFFFFF;
@@ -60,11 +60,11 @@ option{background:var(--menu);color:var(--ink)}
 /* ---------- chrome ---------- */
 .chrome{position:fixed;top:0;left:0;right:0;z-index:100;transition:box-shadow .3s ease}
 .chrome.scrolled{box-shadow:0 1px 0 var(--hair)}
-/* Once scrolled, the bar paints the same slice of the photo that sits behind it (kept in step with the zoom),
-   so cards scrolling underneath are fully hidden instead of ghosting through a translucent blur. */
-.chrome-bg{position:absolute;inset:0;overflow:hidden;opacity:0;transition:opacity .3s ease;pointer-events:none}
+/* Once scrolled, the bar is dark frosted glass made from its own blurred copy of the photo, not from what
+   scrolls behind it, so it reads like a frosted bar while cards underneath stay fully hidden. */
+.chrome-bg{position:absolute;inset:0;overflow:hidden;opacity:0;transition:opacity .3s ease;pointer-events:none;background:var(--page)}
 .chrome.scrolled .chrome-bg{opacity:1}
-.chrome-scene{position:absolute;left:0;top:0;width:100%;height:100vh;background-image:var(--scrim),url("bg.jpg");background-size:cover;background-position:center;transform-origin:50% 40%}
+.chrome-scene{position:absolute;top:-40px;left:-40px;right:-40px;height:calc(100vh + 80px);background-image:var(--scrim),url("bg.jpg");background-size:cover;background-position:center;filter:blur(20px) saturate(160%)}
 .chrome-bg::after{content:"";position:absolute;inset:0;background:var(--chrome)}
 .chrome-inner{position:relative}
 .chrome-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:16px;padding-left:max(var(--gutter),env(safe-area-inset-left,0px));padding-right:max(var(--gutter),env(safe-area-inset-right,0px))}
@@ -349,7 +349,7 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 <div class="bg-scene" id="scene"></div>
 
 <header class="chrome" id="chrome">
-  <div class="chrome-bg" aria-hidden="true"><div class="chrome-scene" id="chrome-scene"></div></div>
+  <div class="chrome-bg" aria-hidden="true"><div class="chrome-scene"></div></div>
   <div class="chrome-inner">
     <span class="brand">Rachel <span>&amp;</span> Xavier</span>
     <nav class="app-tabs" id="tabs" aria-label="Sections"></nav>
@@ -1374,14 +1374,10 @@ let ticking = false;
 function onScroll() {
   const y = scrollY || 0;
   $("#chrome").classList.toggle("scrolled", y > 10);
-  const zoom = REDUCED_MOTION ? "" : `scale(${1 + (Math.min(y, 700) / 700) * 0.12})`;
-  $("#scene").style.transform = zoom;
-  $("#chrome-scene").style.transform = zoom;
+  if (!REDUCED_MOTION) $("#scene").style.transform = `scale(${1 + (Math.min(y, 700) / 700) * 0.12})`;
   ticking = false;
 }
-function sizeChromeScene() { $("#chrome-scene").style.height = $("#scene").offsetHeight + "px"; onScroll(); }
 addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
-addEventListener("resize", sizeChromeScene);
 
 /* ---------- sidebar widgets take turns at the top ---------- */
 
@@ -1457,7 +1453,7 @@ async function boot() {
   if (TABS.some(([k]) => k === hash)) state.tab = hash;
   setGreeting(false);
   render();
-  sizeChromeScene();
+  onScroll();
   startCycle();
 
   const [dbNs, mcpNs, userNs] = await Promise.all([use("db"), use("mcp"), use("user")]);
