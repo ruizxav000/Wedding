@@ -38,7 +38,6 @@
   --tooltip:rgba(7,12,8,.9);
   --menu:#1A2219;
   --on-accent:#17150D;
-  --edge-glow:rgba(255,255,255,.85);
   --chevron:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --f-body:"Jost",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-script:"Cormorant Garamond",Georgia,"Times New Roman",serif;
@@ -72,7 +71,7 @@ option{background:var(--menu);color:var(--ink)}
 .brand span{color:var(--gold)}
 .app-tabs{display:flex;gap:4px;align-items:center;overflow-x:auto;scrollbar-width:none}
 .app-tabs::-webkit-scrollbar{display:none}
-.app-tab{position:relative;padding:8px 15px;font-size:13px;font-weight:500;letter-spacing:.03em;color:var(--mute-faint);background:none;border:0;border-radius:8px;cursor:pointer;white-space:nowrap;transition:color .15s,background .15s}
+.app-tab{padding:8px 15px;font-size:13px;font-weight:500;letter-spacing:.03em;color:var(--mute-faint);background:none;border:0;border-radius:8px;cursor:pointer;white-space:nowrap;transition:color .15s,background .15s}
 .app-tab:hover{color:var(--mute);background:var(--glass-low)}
 .app-tab[aria-current="page"]{color:var(--white);background:rgba(255,255,255,.15)}
 
@@ -98,20 +97,12 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .sh-meta button{margin-left:6px}
 
 /* ---------- liquid glass ---------- */
-.glass,.kpi{position:relative;background:var(--glass);border-radius:14px;backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
+/* each frosted surface gets its own GPU layer; without it Chrome can leave hard seams in the blur while the background zooms */
+.glass,.kpi{position:relative;background:var(--glass);border-radius:14px;backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);transform:translateZ(0);backface-visibility:hidden}
 .glass.gold{background:var(--tint-gold)}
 .glass.gold:hover{background:var(--tint-gold-hi)}
 .glass.fog{background:var(--tint-fog)}
 .glass.quiet{background:var(--glass-quiet);backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%)}
-.glass::before,.kpi::before,.app-tab::before{
-  content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;
-  background:radial-gradient(circle at var(--mx,50%) var(--my,50%),var(--edge-glow) 0%,transparent 45%);
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
-  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;
-  opacity:0;transition:opacity .25s ease;pointer-events:none;z-index:2;
-}
-.kpi::before,.app-tab::before{background:radial-gradient(circle 500px at var(--mx,50%) var(--my,50%),var(--edge-glow) 0%,transparent 45%)}
-.glow::before{opacity:1}
 
 /* ---------- shared bits ---------- */
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -1114,22 +1105,6 @@ document.addEventListener("pointermove", (e) => {
   if (x + 190 > innerWidth) x = e.clientX - 196;
   tooltip.style.left = x + "px"; tooltip.style.top = y + "px";
 }, { passive: true });
-
-/* ---------- liquid glass edge glow (follows the cursor) ---------- */
-
-let glowEl = null;
-document.addEventListener("pointermove", (e) => {
-  if (e.pointerType && e.pointerType !== "mouse") return;
-  const el = e.target.closest ? e.target.closest(".glass,.kpi,.app-tab") : null;
-  if (glowEl && glowEl !== el) { glowEl.classList.remove("glow"); }
-  glowEl = el;
-  if (!el) return;
-  const r = el.getBoundingClientRect();
-  el.style.setProperty("--mx", (((e.clientX - r.left) / r.width) * 100).toFixed(1) + "%");
-  el.style.setProperty("--my", (((e.clientY - r.top) / r.height) * 100).toFixed(1) + "%");
-  el.classList.add("glow");
-}, { passive: true });
-document.addEventListener("pointerleave", () => { if (glowEl) glowEl.classList.remove("glow"); glowEl = null; });
 
 /* ---------- toast ---------- */
 
