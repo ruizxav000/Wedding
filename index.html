@@ -1369,11 +1369,11 @@ function cycleWidgets() {
     // slide with `top` (they're position:relative), not a transform, so their pinned glass background stays aligned
     rest.forEach((el, i) => { el.style.transition = "none"; el.style.top = `${before[i] - el.getBoundingClientRect().top}px`; });
     void side.offsetHeight;
-    rest.forEach((el) => { el.style.transition = "top .5s cubic-bezier(.4,0,.2,1)"; el.style.top = ""; });
+    rest.forEach((el) => { el.style.transition = "top .5s cubic-bezier(.4,0,.2,1)"; el.style.top = "0px"; });   // "0px", not "": a slide to auto never animates
     setTimeout(() => {
       top.style.transition = "opacity .35s ease";
       top.style.opacity = "";
-      setTimeout(() => items.forEach((el) => { el.style.transition = ""; }), 380);
+      setTimeout(() => items.forEach((el) => { el.style.transition = ""; el.style.top = ""; }), 380);
     }, 520);
   }, 260);
 }
