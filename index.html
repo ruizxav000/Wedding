@@ -4,25 +4,25 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500;1,600&family=DM+Mono:wght@400&family=Jost:wght@300;400;500;600&display=swap">
 <style>
-/* Layout: fixed glass chrome over a dusk photo; main column beside a 284px sticky widget rail,
+/* Layout: fixed glass chrome over a redwoods photo; main column beside a 284px sticky widget rail,
    collapsing to one column under 860px. Dashboard drops the rail and runs full width. */
 :root{
   color-scheme:dark;
-  --page:#0B1424;
-  --page-grad:linear-gradient(150deg,#0A1A2C 0%,#1B1834 55%,#2B1530 100%);
-  --scrim:linear-gradient(180deg,rgba(8,12,26,.56) 0%,rgba(8,12,26,.74) 100%);
-  --chrome:rgba(8,12,26,.55);
-  --ink:#EEF0F6;
-  --ink-soft:rgba(238,240,246,.76);
+  --page:#0D1610;
+  --page-grad:linear-gradient(150deg,#0E1C14 0%,#17201A 55%,#261B12 100%);
+  --scrim:linear-gradient(180deg,rgba(8,13,9,.64) 0%,rgba(8,13,9,.76) 100%);
+  --chrome:rgba(9,15,10,.58);
+  --ink:#F2F0E6;
+  --ink-soft:rgba(242,240,230,.78);
   --white:#FFFFFF;
-  --mute:#B4AED6;
-  --mute-faint:rgba(180,174,214,.58);
-  --sky:#8DB9EA;
-  --rose:#F2A5B9;
-  --sage:#9ED4B6;
-  --peach:#F6B98E;
-  --lilac:#BDB2F2;
-  --alert:#FF9393;
+  --mute:#BDBCA6;
+  --mute-faint:rgba(189,188,166,.6);
+  --fog:#A3C6D6;          /* Xavier: morning fog in the canopy */
+  --rose:#EEA79C;         /* Rachel: redwood-bark rose */
+  --fern:#AFD38E;         /* Both: sword fern */
+  --gold:#F2C46D;         /* highlights: the sunbeam */
+  --lichen:#D7CBA2;       /* labels: sunlit bark */
+  --alert:#FF9C86;
   --glass:rgba(255,255,255,.09);
   --glass-hi:rgba(255,255,255,.13);
   --glass-low:rgba(255,255,255,.06);
@@ -32,12 +32,12 @@
   --field:rgba(255,255,255,.08);
   --field-focus:rgba(255,255,255,.12);
   --track:rgba(255,255,255,.12);
-  --tint-peach:rgba(246,185,142,.11);
-  --tint-peach-hi:rgba(246,185,142,.16);
-  --tint-sky:rgba(141,185,234,.12);
-  --tooltip:rgba(6,10,22,.9);
-  --menu:#1D1A31;
-  --on-accent:#1A1426;
+  --tint-gold:rgba(242,196,109,.11);
+  --tint-gold-hi:rgba(242,196,109,.16);
+  --tint-fog:rgba(163,198,214,.12);
+  --tooltip:rgba(7,12,8,.9);
+  --menu:#1A2219;
+  --on-accent:#17150D;
   --edge-glow:rgba(255,255,255,.85);
   --f-body:"Jost",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-script:"Cormorant Garamond",Georgia,"Times New Roman",serif;
@@ -50,8 +50,8 @@ html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;scroll
 body{margin:0;min-height:100vh;background:var(--page-grad),var(--page);color:var(--ink);font:300 15px/1.6 var(--f-body);overscroll-behavior-y:none}
 h1,h2,h3,p{margin:0}
 button,input,select{font:inherit;color:inherit}
-a{color:var(--sky)}
-:focus-visible{outline:2px solid var(--peach);outline-offset:2px}
+a{color:var(--fog)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 option{background:var(--menu);color:var(--ink)}
 
 .bg-scene{position:fixed;inset:0;z-index:-1;background-image:var(--scrim),url("bg.jpg");background-size:cover;background-position:center;transform-origin:50% 40%;will-change:transform}
@@ -61,7 +61,7 @@ option{background:var(--menu);color:var(--ink)}
 .chrome.scrolled{background:var(--chrome);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
 .chrome-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:16px;padding-left:max(var(--gutter),env(safe-area-inset-left,0px));padding-right:max(var(--gutter),env(safe-area-inset-right,0px))}
 .brand{font:italic 500 1.8rem/1 var(--f-script);color:var(--ink);white-space:nowrap;letter-spacing:.01em}
-.brand span{color:var(--peach)}
+.brand span{color:var(--gold)}
 .app-tabs{display:flex;gap:4px;align-items:center;overflow-x:auto;scrollbar-width:none}
 .app-tabs::-webkit-scrollbar{display:none}
 .app-tab{position:relative;padding:8px 15px;font-size:13px;font-weight:500;letter-spacing:.03em;color:var(--mute-faint);background:none;border:0;border-radius:8px;cursor:pointer;white-space:nowrap;transition:color .15s,background .15s}
@@ -85,15 +85,15 @@ main{min-width:0}
 
 .sh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:30px 0 14px}
 main > .sh:first-child,main > .notice + .sh{margin-top:10px}
-.sh-label{font-size:15px;font-weight:600;letter-spacing:.03em;color:var(--peach)}
+.sh-label{font-size:15px;font-weight:600;letter-spacing:.03em;color:var(--gold)}
 .sh-meta{font-size:12px;color:var(--mute)}
 .sh-meta button{margin-left:6px}
 
 /* ---------- liquid glass ---------- */
 .glass,.kpi{position:relative;background:var(--glass);border-radius:14px;backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
-.glass.peach{background:var(--tint-peach)}
-.glass.peach:hover{background:var(--tint-peach-hi)}
-.glass.sky{background:var(--tint-sky)}
+.glass.gold{background:var(--tint-gold)}
+.glass.gold:hover{background:var(--tint-gold-hi)}
+.glass.fog{background:var(--tint-fog)}
 .glass.quiet{background:var(--glass-quiet);backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%)}
 .glass::before,.kpi::before,.app-tab::before{
   content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;
@@ -118,7 +118,7 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .icon-btn{flex:none;width:30px;height:30px;display:grid;place-items:center;border:0;border-radius:8px;background:none;color:var(--mute-faint);cursor:pointer;transition:background .15s,color .15s}
 .icon-btn:hover{background:var(--glass-low);color:var(--ink)}
 .icon-btn svg{width:14px;height:14px}
-.btn{font-size:13px;font-weight:500;letter-spacing:.03em;padding:8px 16px;border:0;border-radius:9px;background:var(--peach);color:var(--on-accent);cursor:pointer;white-space:nowrap}
+.btn{font-size:13px;font-weight:500;letter-spacing:.03em;padding:8px 16px;border:0;border-radius:9px;background:var(--gold);color:var(--on-accent);cursor:pointer;white-space:nowrap}
 .btn:hover{filter:brightness(1.06)}
 .btn.ghost{background:var(--glass-hi);color:var(--ink)}
 .btn.small{font-size:12px;padding:5px 12px}
@@ -128,14 +128,14 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--on-accent);border-color:transparent}
 .chip .n{font-family:var(--f-mono);font-size:11px;opacity:.7;margin-left:5px}
 .bar{height:6px;border-radius:9px;background:var(--track);overflow:hidden}
-.bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--sky),var(--rose));transition:width .6s ease}
+.bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--fern),var(--gold));transition:width .6s ease}
 .bar.over i{background:var(--alert)}
 
 /* ---------- forms ---------- */
 .composer{display:flex;flex-wrap:wrap;gap:8px;padding:12px;margin-bottom:12px}
 .field{font-size:13.5px;color:var(--ink);background:var(--field);border:1px solid var(--hair);border-radius:9px;padding:8px 11px;min-width:0}
 .field::placeholder{color:var(--mute-faint)}
-.field:focus{outline:none;border-color:rgba(246,185,142,.6);background:var(--field-focus)}
+.field:focus{outline:none;border-color:rgba(242,196,109,.6);background:var(--field-focus)}
 .field.grow{flex:1 1 200px}
 .field.num{width:120px;font-family:var(--f-mono);font-size:13px}
 .field.date{width:150px}
@@ -144,9 +144,9 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 /* ---------- coming-up spotlight cards ---------- */
 .spot{padding:18px 20px;display:flex;flex-direction:column;gap:5px}
 .spot-title{font-size:15px;font-weight:600;line-height:1.35;letter-spacing:-.01em;color:var(--white);padding-right:96px;text-wrap:balance;overflow-wrap:anywhere}
-.spot-badge{position:absolute;top:16px;right:16px;font:400 11px/1.6 var(--f-mono);padding:1px 9px;border-radius:99px;background:var(--glass);color:var(--peach)}
+.spot-badge{position:absolute;top:16px;right:16px;font:400 11px/1.6 var(--f-mono);padding:1px 9px;border-radius:99px;background:var(--glass);color:var(--gold)}
 .spot-badge.late{color:var(--alert)}
-.spot-deck{font-size:12px;color:var(--sky);letter-spacing:.01em}
+.spot-deck{font-size:12px;color:var(--fog);letter-spacing:.01em}
 .spot-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
 
 /* ---------- task rows ---------- */
@@ -156,7 +156,7 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .task.is-done .task-title{text-decoration:line-through;color:var(--mute-faint)}
 .task-meta{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:12px;color:var(--mute)}
 .due-late{color:var(--alert)}
-.due-soon{color:var(--peach)}
+.due-soon{color:var(--gold)}
 .task-tools{display:flex;align-items:center;gap:2px;margin-left:auto}
 .task-tools .pill-select{margin-right:6px}
 .check{flex:none;width:26px;height:26px;display:grid;place-items:center;border-radius:50%;border:1.5px solid var(--c);background:none;color:transparent;cursor:pointer;transition:background .15s,color .15s}
@@ -173,7 +173,7 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .q-row:last-child{border-bottom:0}
 .q-name{font-size:13px;font-weight:500;color:var(--white);overflow-wrap:anywhere}
 .q-row.read .q-name{font-weight:400;color:var(--ink-soft)}
-.q-meta{font-size:11px;color:var(--lilac);white-space:nowrap}
+.q-meta{font-size:11px;color:var(--lichen);white-space:nowrap}
 .q-note{grid-column:1/-1;font-size:12.5px;color:var(--mute);overflow-wrap:anywhere}
 .q-link{grid-column:1/-1;font-size:12px;text-decoration:none;opacity:.8;justify-self:start}
 .q-link:hover{opacity:1;text-decoration:underline}
@@ -184,9 +184,9 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .card-head > div{min-width:0}
 .card-name{font-size:14px;font-weight:600;color:var(--white);overflow-wrap:anywhere}
-.card-deck{font-size:12px;color:var(--lilac);margin-top:1px}
+.card-deck{font-size:12px;color:var(--lichen);margin-top:1px}
 .card-tools{display:flex;flex:none}
-.contact{display:flex;align-items:center;gap:4px;font:400 12px var(--f-mono);color:var(--sky);min-width:0}
+.contact{display:flex;align-items:center;gap:4px;font:400 12px var(--f-mono);color:var(--fog);min-width:0}
 .contact span{overflow-wrap:anywhere;user-select:text}
 .contact .icon-btn{width:26px;height:26px}
 .status-select{align-self:flex-start}
@@ -200,11 +200,11 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .summary{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
 .summary-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.stat-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--lilac)}
+.stat-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--lichen)}
 .stat-val{font-size:1.35rem;font-weight:600;letter-spacing:-.02em;color:var(--white);font-variant-numeric:tabular-nums;margin-top:2px;white-space:nowrap}
 .stat-sub{font-size:11px;color:var(--mute-faint)}
 .event{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px 36px;align-items:center;padding:22px 24px;margin-top:10px}
-.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--lilac);margin-bottom:6px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--lichen);margin-bottom:6px}
 .count-n{font-size:3.4rem;font-weight:600;line-height:1;letter-spacing:-.04em;color:var(--white);font-variant-numeric:tabular-nums}
 .count-l{font-size:12.5px;color:var(--mute);margin-top:4px}
 .facts{display:flex;flex-direction:column}
@@ -215,27 +215,27 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 
 /* ---------- sidebar widgets ---------- */
 .widget{padding:14px 16px}
-.wlabel{font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--lilac);margin-bottom:8px}
+.wlabel{font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--lichen);margin-bottom:8px}
 .wdiv{border:0;border-top:1px solid var(--hair);margin:0 0 8px}
 .cd-row{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:6px 0}
 .cd-row + .cd-row{border-top:1px solid var(--hair-faint)}
 .cd-n{font-size:1.7rem;font-weight:600;line-height:1;letter-spacing:-.02em;color:var(--white);font-variant-numeric:tabular-nums}
 .cd-l{font-size:11px;color:var(--mute);margin-top:4px}
-.cd-date{font:400 11px var(--f-mono);color:var(--sky);white-space:nowrap}
+.cd-date{font:400 11px var(--f-mono);color:var(--fog);white-space:nowrap}
 .now-label{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute-faint);margin-bottom:6px}
 .now-val{font-size:1.9rem;font-weight:600;line-height:1;letter-spacing:-.02em;color:var(--white);font-variant-numeric:tabular-nums;margin-bottom:6px}
-.now-change{font:400 11px var(--f-mono);color:var(--sage)}
+.now-change{font:400 11px var(--f-mono);color:var(--fern)}
 .now-sub{font-size:10.5px;color:var(--mute-faint);margin-top:4px}
 .wk-row{display:flex;align-items:baseline;gap:8px;font-size:11.5px;color:var(--mute);padding:5px 0;border-bottom:1px solid var(--hair-faint)}
 .wk-row:last-child{border-bottom:0}
 .wk-row.today{color:var(--white)}
 .wk-row.late{color:var(--alert)}
 .wk-day{flex:none;min-width:4.4rem;font:400 10.5px var(--f-mono)}
-.wk-row.today .wk-day{color:var(--sky)}
+.wk-row.today .wk-day{color:var(--fog)}
 .wk-desc{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wk-row.today .wk-desc{font-weight:500}
 .wk-row.empty-day .wk-desc{color:var(--mute-faint)}
-.wk-dot{flex:none;width:5px;height:5px;border-radius:50%;background:var(--sage);align-self:center}
+.wk-dot{flex:none;width:5px;height:5px;border-radius:50%;background:var(--fern);align-self:center}
 .load-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--hair-faint)}
 .load-row:last-child{border-bottom:0}
 .load-row b{font:400 12px var(--f-mono);color:var(--white)}
@@ -250,20 +250,20 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .photo-empty{font-size:12px;color:var(--mute);display:flex;flex-direction:column;gap:10px;align-items:flex-start}
 .wlabel-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .wlabel-row .wlabel{margin:0}
-.link-btn{font-size:11.5px;color:var(--sky);background:none;border:0;padding:0;cursor:pointer}
+.link-btn{font-size:11.5px;color:var(--fog);background:none;border:0;padding:0;cursor:pointer}
 .link-btn:hover{text-decoration:underline}
 
 /* ---------- dashboard ---------- */
 .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:10px 0 14px}
 .kpi{background:rgba(255,255,255,.08);padding:16px 18px;min-width:0;overflow:hidden;transition:background .15s}
 .kpi:hover{background:var(--glass-hi)}
-.kpi-lbl{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--lilac);margin-bottom:6px}
+.kpi-lbl{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--lichen);margin-bottom:6px}
 .kpi-val{font-size:1.9rem;font-weight:600;line-height:1;letter-spacing:-.02em;color:var(--white);font-variant-numeric:tabular-nums;white-space:nowrap}
 .kpi-sub{font-size:10.5px;color:var(--mute-faint);margin-top:5px}
 .charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .dcard{padding:20px;min-width:0;overflow:hidden}
 .dcard-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:16px}
-.dcard-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--lilac)}
+.dcard-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--lichen)}
 .dcard-meta{font-size:10.5px;color:var(--mute-faint);background:var(--hair-faint);padding:2px 8px;border-radius:4px;white-space:nowrap}
 .donut-wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
 .donut{width:100%;max-width:230px;display:block}
@@ -305,7 +305,7 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .tt-val{font:400 12px var(--f-mono);color:var(--ink)}
 .tt-pct{font:400 11px var(--f-mono);color:var(--mute);margin-left:4px}
 #toast{position:fixed;left:50%;top:calc(84px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:250;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);padding:8px 8px 8px 16px;border-radius:99px;background:var(--tooltip);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 10px 40px rgba(0,0,0,.4);font-size:13px;color:var(--ink)}
-#toast .dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--sage)}
+#toast .dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--fern)}
 #toast.bad .dot{background:var(--alert)}
 #toast .msg{padding-right:8px}
 #toast button{flex:none;font-size:12px;font-weight:500;background:var(--glass-hi);border:0;border-radius:99px;padding:4px 12px;cursor:pointer}
@@ -352,7 +352,7 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
   <main id="main"></main>
   <aside class="side" id="side" aria-label="At a glance">
     <div class="widget glass" id="w-countdown"></div>
-    <div class="widget glass sky" id="w-money"></div>
+    <div class="widget glass fog" id="w-money"></div>
     <div class="widget glass" id="w-photos"></div>
     <div class="widget glass" id="w-week"></div>
     <div class="widget glass" id="w-load"></div>
@@ -389,12 +389,12 @@ const EVENTS = {
 };
 const PARTS = { elopement: "Elopement", reception: "Reception", general: "General" };
 const PEOPLE = {
-  xavier: { name: "Xavier", color: "var(--sky)" },
+  xavier: { name: "Xavier", color: "var(--fog)" },
   rachel: { name: "Rachel", color: "var(--rose)" },
-  both:   { name: "Both",   color: "var(--sage)" },
+  both:   { name: "Both",   color: "var(--fern)" },
 };
 const UNASSIGNED_COLOR = "var(--mute)";
-const STATUSES = { "Researching": "var(--lilac)", "Contacted": "var(--sky)", "Booked": "var(--sage)", "Paid in full": "var(--peach)" };
+const STATUSES = { "Researching": "var(--lichen)", "Contacted": "var(--fog)", "Booked": "var(--fern)", "Paid in full": "var(--gold)" };
 const TABS = [["home","Home"],["elopement","Elopement"],["reception","Reception"],["budget","Budget"],["people","People"],["inbox","Inbox"],["dashboard","Dashboard"]];
 const GREETINGS = {
   home: ["Good {part}, <strong>{name}.</strong>", "Two celebrations, <strong>one plan.</strong>", "Here's where things stand, <strong>{name}.</strong>", "Let's knock a few out, <strong>{name}.</strong>"],
@@ -504,7 +504,7 @@ function partSelect(id, selected) {
 function taskRow(t) {
   if (state.editing === "task:" + t.id) return taskEditForm(t);
   const id = esc(t.id);
-  const checkColor = t.done ? personColor(t.doneBy) : "var(--sage)";
+  const checkColor = t.done ? personColor(t.doneBy) : "var(--fern)";
   const meta = [];
   if (t.done) {
     meta.push(`Done by ${PEOPLE[t.doneBy] ? PEOPLE[t.doneBy].name : "someone"}${t.doneAt ? " · " + fmtStamp(t.doneAt) : ""}`);
@@ -547,7 +547,7 @@ function taskForm(part) {
 function spotCard(t) {
   const d = daysUntil(t.due);
   const badge = d < 0 ? `${plural(-d, "day")} late` : d === 0 ? "Today" : d === 1 ? "Tomorrow" : `in ${d} days`;
-  return `<article class="spot glass peach">
+  return `<article class="spot glass gold">
     <span class="spot-badge${d < 0 ? " late" : ""}">${badge}</span>
     <h3 class="spot-title">${esc(t.title)}</h3>
     <p class="spot-deck">${fmtDay(t.due, { weekday: "short", month: "short", day: "numeric" })} · ${esc(PARTS[t.part] || "General")}</p>
@@ -566,7 +566,7 @@ function personCard(p) {
       <div><h3 class="card-name">${esc(p.name)}</h3>${p.role ? `<p class="card-deck">${esc(p.role)}</p>` : ""}</div>
       ${state.canWrite ? `<div class="card-tools"><button class="icon-btn" data-action="edit" data-id="person:${id}" aria-label="Edit ${esc(p.name)}">${ICON.edit}</button><button class="icon-btn" data-action="delete" data-kind="people" data-id="${id}" aria-label="Delete ${esc(p.name)}">${ICON.close}</button></div>` : ""}
     </div>
-    <select id="status-${id}" class="pill-select status-select" style="--c:${STATUSES[p.status] || "var(--lilac)"}" data-change="person-status" data-id="${id}" aria-label="Status"${disabled()}>${statuses.map((s) => `<option${(p.status || "Researching") === s ? " selected" : ""}>${esc(s)}</option>`).join("")}</select>
+    <select id="status-${id}" class="pill-select status-select" style="--c:${STATUSES[p.status] || "var(--lichen)"}" data-change="person-status" data-id="${id}" aria-label="Status"${disabled()}>${statuses.map((s) => `<option${(p.status || "Researching") === s ? " selected" : ""}>${esc(s)}</option>`).join("")}</select>
     ${contact(p.email, "email")}${contact(p.phone, "phone number")}
     <input id="note-${id}" class="field note-field" data-change="person-note" data-id="${id}" value="${esc(p.note || "")}" placeholder="${state.canWrite ? "Add a note" : "No notes"}" aria-label="Notes about ${esc(p.name)}"${disabled()}>
   </article>`;
@@ -838,7 +838,7 @@ function drillView() {
   if (d.type === "status" || d.type === "person") {
     const open = state.tasks.filter((t) => !t.done);
     let list;
-    if (d.key === "done") { list = state.tasks.filter((t) => t.done); title = "Done"; color = "var(--lilac)"; }
+    if (d.key === "done") { list = state.tasks.filter((t) => t.done); title = "Done"; color = "var(--lichen)"; }
     else if (d.key === "none") { list = open.filter((t) => !PEOPLE[t.who]); title = "Unassigned"; color = "var(--mute)"; }
     else if (PEOPLE[d.key]) { list = open.filter((t) => t.who === d.key); title = PEOPLE[d.key].name; color = PEOPLE[d.key].color; }
     else list = [];
@@ -858,7 +858,7 @@ function drillView() {
   </section>`;
 }
 
-const partColor = (k) => ({ elopement: "var(--sage)", reception: "var(--rose)", general: "var(--lilac)" }[k] || "var(--lilac)");
+const partColor = (k) => ({ elopement: "var(--fern)", reception: "var(--rose)", general: "var(--lichen)" }[k] || "var(--lichen)");
 
 function dashboardView() {
   const all = state.tasks, done = all.filter((t) => t.done), open = all.filter((t) => !t.done);
@@ -870,19 +870,19 @@ function dashboardView() {
   const kpis = [
     ["Tasks done", `${done.length}/${all.length}`, all.length ? `${pct(done.length, all.length)}% complete` : "no tasks yet", ""],
     ["Open", open.length, overdue ? `${overdue} overdue` : "none overdue", overdue ? "var(--alert)" : ""],
-    ["Due this week", thisWeek, "next 7 days", thisWeek ? "var(--peach)" : ""],
-    ["Planned", moneyShort(planned), total ? `of ${money(total)} budget` : "no total set", "var(--sky)"],
-    ["Paid", moneyShort(paid), `${money(Math.max(0, planned - paid))} to go`, "var(--sage)"],
+    ["Due this week", thisWeek, "next 7 days", thisWeek ? "var(--gold)" : ""],
+    ["Planned", moneyShort(planned), total ? `of ${money(total)} budget` : "no total set", "var(--fog)"],
+    ["Paid", moneyShort(paid), `${money(Math.max(0, planned - paid))} to go`, "var(--fern)"],
     ["Countdown", next ? `${next.d}d` : "—", next ? `to the ${next.k}` : "both celebrated", ""],
   ];
   const kpiHTML = kpis.map(([l, v, s, c]) => `<div class="kpi"><p class="kpi-lbl">${l}</p><p class="kpi-val"${c ? ` style="color:${c}"` : ""}>${esc(v)}</p><p class="kpi-sub">${esc(s)}</p></div>`).join("");
 
   const status = [
-    { key: "xavier", name: "Xavier", v: open.filter((t) => t.who === "xavier").length, color: "var(--sky)" },
+    { key: "xavier", name: "Xavier", v: open.filter((t) => t.who === "xavier").length, color: "var(--fog)" },
     { key: "rachel", name: "Rachel", v: open.filter((t) => t.who === "rachel").length, color: "var(--rose)" },
-    { key: "both", name: "Both", v: open.filter((t) => t.who === "both").length, color: "var(--sage)" },
+    { key: "both", name: "Both", v: open.filter((t) => t.who === "both").length, color: "var(--fern)" },
     { key: "none", name: "Unassigned", v: open.filter((t) => !PEOPLE[t.who]).length, color: "var(--mute-faint)" },
-    { key: "done", name: "Done", v: done.length, color: "var(--lilac)" },
+    { key: "done", name: "Done", v: done.length, color: "var(--lichen)" },
   ];
   const statusCard = all.length
     ? `<div class="donut-wrap">${donutSVG(status, "status", { big: `${pct(done.length, all.length)}%`, cap: "tasks done" })}${legend(status)}</div>`
