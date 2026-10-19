@@ -11,7 +11,7 @@
   --page:#0D1610;
   --page-grad:linear-gradient(150deg,#0E1C14 0%,#17201A 55%,#261B12 100%);
   --scrim:linear-gradient(180deg,rgba(8,13,9,.64) 0%,rgba(8,13,9,.76) 100%);
-  --chrome:rgba(9,15,10,.58);
+  --chrome:rgba(9,15,10,.22);
   --ink:#F2F0E6;
   --ink-soft:rgba(242,240,230,.78);
   --white:#FFFFFF;
@@ -39,6 +39,7 @@
   --menu:#1A2219;
   --on-accent:#17150D;
   --edge-glow:rgba(255,255,255,.85);
+  --chevron:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --f-body:"Jost",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-script:"Cormorant Garamond",Georgia,"Times New Roman",serif;
   --f-mono:"DM Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
@@ -57,8 +58,15 @@ option{background:var(--menu);color:var(--ink)}
 .bg-scene{position:fixed;inset:0;z-index:-1;background-image:var(--scrim),url("bg.jpg");background-size:cover;background-position:center;transform-origin:50% 40%;will-change:transform}
 
 /* ---------- chrome ---------- */
-.chrome{position:fixed;top:0;left:0;right:0;z-index:100;transition:background .3s ease,backdrop-filter .3s ease,-webkit-backdrop-filter .3s ease}
-.chrome.scrolled{background:var(--chrome);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
+.chrome{position:fixed;top:0;left:0;right:0;z-index:100;transition:box-shadow .3s ease}
+.chrome.scrolled{box-shadow:0 1px 0 var(--hair)}
+/* Once scrolled, the bar paints the same slice of the photo that sits behind it (kept in step with the zoom),
+   so cards scrolling underneath are fully hidden instead of ghosting through a translucent blur. */
+.chrome-bg{position:absolute;inset:0;overflow:hidden;opacity:0;transition:opacity .3s ease;pointer-events:none}
+.chrome.scrolled .chrome-bg{opacity:1}
+.chrome-scene{position:absolute;left:0;top:0;width:100%;height:100vh;background-image:var(--scrim),url("bg.jpg");background-size:cover;background-position:center;transform-origin:50% 40%}
+.chrome-bg::after{content:"";position:absolute;inset:0;background:var(--chrome)}
+.chrome-inner{position:relative}
 .chrome-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:16px;padding-left:max(var(--gutter),env(safe-area-inset-left,0px));padding-right:max(var(--gutter),env(safe-area-inset-right,0px))}
 .brand{font:italic 500 1.8rem/1 var(--f-script);color:var(--ink);white-space:nowrap;letter-spacing:.01em}
 .brand span{color:var(--gold)}
@@ -113,8 +121,15 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .notice{padding:12px 18px;margin-top:10px;font-size:13px;color:var(--ink-soft)}
 .pill{display:inline-block;padding:1px 10px;border-radius:99px;font-size:11.5px;font-weight:500;background:var(--c);color:var(--on-accent);white-space:nowrap}
 .pill.out{background:none;border:1px solid var(--mute-faint);color:var(--mute)}
-.pill-select{appearance:none;-webkit-appearance:none;cursor:pointer;font-size:12px;font-weight:500;padding:3px 12px;border-radius:99px;border:1px solid var(--c);color:var(--c);background:var(--glass-low)}
-.pill-select:disabled{cursor:default;opacity:.8}
+.select{position:relative;display:inline-flex;flex:none;min-width:0}
+.select > select{width:100%;appearance:none;-webkit-appearance:none;cursor:pointer}
+.select > select.field{padding-right:34px}
+.select::after{content:"";position:absolute;top:50%;right:13px;width:10px;height:6px;transform:translateY(-50%);pointer-events:none;background:var(--c,var(--mute));-webkit-mask:var(--chevron) center/contain no-repeat;mask:var(--chevron) center/contain no-repeat}
+.select.is-pill::after{right:11px;width:8px;height:5px}
+.select:has(> select:disabled)::after{display:none}
+.select.status{align-self:flex-start}
+.pill-select{height:26px;padding:0 27px 0 12px;font-size:12px;font-weight:500;line-height:24px;border-radius:99px;border:1px solid var(--c);color:var(--c);background:var(--glass-low)}
+.pill-select:disabled{cursor:default;opacity:.85;padding-right:12px}
 .icon-btn{flex:none;width:30px;height:30px;display:grid;place-items:center;border:0;border-radius:8px;background:none;color:var(--mute-faint);cursor:pointer;transition:background .15s,color .15s}
 .icon-btn:hover{background:var(--glass-low);color:var(--ink)}
 .icon-btn svg{width:14px;height:14px}
@@ -133,7 +148,8 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 
 /* ---------- forms ---------- */
 .composer{display:flex;flex-wrap:wrap;gap:8px;padding:12px;margin-bottom:12px}
-.field{font-size:13.5px;color:var(--ink);background:var(--field);border:1px solid var(--hair);border-radius:9px;padding:8px 11px;min-width:0}
+.field{height:38px;font-size:13.5px;line-height:20px;color:var(--ink);background:var(--field);border:1px solid var(--hair);border-radius:9px;padding:0 11px;min-width:0}
+.composer .btn{height:38px;padding-block:0}
 .field::placeholder{color:var(--mute-faint)}
 .field:focus{outline:none;border-color:rgba(242,196,109,.6);background:var(--field-focus)}
 .field.grow{flex:1 1 200px}
@@ -158,7 +174,7 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .due-late{color:var(--alert)}
 .due-soon{color:var(--gold)}
 .task-tools{display:flex;align-items:center;gap:2px;margin-left:auto}
-.task-tools .pill-select{margin-right:6px}
+.task-tools .select{margin-right:6px}
 .check{flex:none;width:26px;height:26px;display:grid;place-items:center;border-radius:50%;border:1.5px solid var(--c);background:none;color:transparent;cursor:pointer;transition:background .15s,color .15s}
 .check:hover{color:var(--c);background:var(--glass-low)}
 .check.on{background:var(--c);color:var(--on-accent)}
@@ -189,7 +205,6 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .contact{display:flex;align-items:center;gap:4px;font:400 12px var(--f-mono);color:var(--fog);min-width:0}
 .contact span{overflow-wrap:anywhere;user-select:text}
 .contact .icon-btn{width:26px;height:26px}
-.status-select{align-self:flex-start}
 .note-field{width:100%;font-size:12.5px}
 .figs{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--mute)}
 .figs b{font:400 13px var(--f-mono);color:var(--ink)}
@@ -244,15 +259,9 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 /* two stacked layers: the incoming photo fades in over the outgoing one */
 .ph-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.4s cubic-bezier(.4,0,.2,1)}
 .ph-layer.on{opacity:1}
-.photo-add{position:absolute;top:10px;right:10px;z-index:3;font-size:11.5px;font-weight:500;padding:4px 11px;border:0;border-radius:99px;background:var(--tooltip);color:var(--ink);cursor:pointer;opacity:0;transition:opacity .2s ease}
-.photo:hover .photo-add,.photo-add:focus-visible{opacity:1}
-@media (hover:none){.photo-add{opacity:1}}
-.photo-tools{position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:6px}
-.photo-dots{display:flex;gap:5px}
-.photo-dots button{width:7px;height:7px;padding:0;border-radius:50%;border:0;background:rgba(255,255,255,.45);cursor:pointer}
+.photo-dots{position:absolute;left:12px;bottom:12px;display:flex;gap:6px}
+.photo-dots button{width:7px;height:7px;padding:0;border-radius:50%;border:0;background:rgba(255,255,255,.45);cursor:pointer;transition:background .2s}
 .photo-dots button[aria-current="true"]{background:var(--white)}
-.photo-tools .icon-btn{background:var(--tooltip);color:var(--ink)}
-.photo-actions{display:flex;gap:4px}
 .link-btn{font-size:11.5px;color:var(--fog);background:none;border:0;padding:0;cursor:pointer}
 .link-btn:hover{text-decoration:underline}
 
@@ -340,6 +349,7 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 <div class="bg-scene" id="scene"></div>
 
 <header class="chrome" id="chrome">
+  <div class="chrome-bg" aria-hidden="true"><div class="chrome-scene" id="chrome-scene"></div></div>
   <div class="chrome-inner">
     <span class="brand">Rachel <span>&amp;</span> Xavier</span>
     <nav class="app-tabs" id="tabs" aria-label="Sections"></nav>
@@ -364,7 +374,6 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 
 <div id="tooltip" hidden><p class="tt-title" id="tt-title"></p><div class="tt-body" id="tt-body"></div></div>
 <div id="toast" role="status" aria-live="polite" hidden></div>
-<input type="file" id="photo-input" accept="image/*" multiple hidden>
 
 <script>
 "use strict";
@@ -416,7 +425,6 @@ const ICON = {
   edit: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 2.5l3 3-8 8h-3v-3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
   close: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
   copy: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>',
-  image: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 11.5l3.5-3.5 3 3 2-2 2.5 2.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
 };
 
 /* ===================== state ===================== */
@@ -425,7 +433,7 @@ const state = {
   tab: "home",
   filter: "all",
   me: "",
-  tasks: [], budget: [], people: [], photos: [], settings: {},
+  tasks: [], budget: [], people: [], settings: {},
   loaded: new Set(),
   status: "loading",      // loading | live | offline
   canWrite: true,
@@ -435,10 +443,10 @@ const state = {
   photoIndex: 0,
   mail: { status: "off", threads: [], code: "", storedAt: 0 },
 };
-let db = null, mcp = null, assets = null, uid = null;
+let db = null, mcp = null, uid = null;
 let mailUnwatch = null, mailQuery = null, mailInput = null;
 let animateDash = false;
-let photoSignature = "", photoShown = "", photoLayer = 0;
+let photoShown = "", photoLayer = 0;
 
 try { state.me = localStorage.getItem("wedding-hq:me") || ""; } catch (e) {}
 
@@ -461,19 +469,12 @@ const decodeEntities = (s) => { const t = document.createElement("textarea"); t.
 const personColor = (key) => (PEOPLE[key] ? PEOPLE[key].color : UNASSIGNED_COLOR);
 const viewerName = () => (PEOPLE[state.me] ? PEOPLE[state.me].name : "you two");
 const partOfDay = () => { const h = new Date().getHours(); return h < 12 ? "morning" : h < 18 ? "afternoon" : "evening"; };
-const photoUrl = (assetId) => "/_blob/" + encodeURIComponent(assetId);
-
-// The engagement photos ship with the page. Photos added in the album join them.
-// `key` is what settings.background stores: a built-in id, or an uploaded asset id.
-const BUILTIN_PHOTOS = [
-  { key: "builtin-proposal", src: "photos/proposal.jpg", caption: "The proposal, under the red maple", focus: "42% 68%" },
-  { key: "builtin-harbor", src: "photos/harbor.jpg", caption: "Rachel and Xavier on the Boston waterfront", focus: "50% 58%" },
-  { key: "builtin-ring", src: "photos/ring.jpg", caption: "Rachel's ring", focus: "50% 45%" },
-  { key: "builtin-hands", src: "photos/hands.jpg", caption: "Holding hands", focus: "50% 50%" },
-];
-const allPhotos = () => [
-  ...BUILTIN_PHOTOS,
-  ...state.photos.map((p) => ({ key: p.asset, id: p.id, src: photoUrl(p.asset), caption: p.caption, focus: "50% 50%", uploaded: true })),
+// The engagement photos ship with the page.
+const PHOTOS = [
+  { key: "proposal", src: "photos/proposal.jpg", caption: "The proposal, under the red maple", focus: "42% 68%" },
+  { key: "harbor", src: "photos/harbor.jpg", caption: "Rachel and Xavier on the Boston waterfront", focus: "50% 58%" },
+  { key: "ring", src: "photos/ring.jpg", caption: "Rachel's ring", focus: "50% 45%" },
+  { key: "hands", src: "photos/hands.jpg", caption: "Holding hands", focus: "50% 50%" },
 ];
 
 function byDue(a, b) {
@@ -507,13 +508,17 @@ const pill = (key) => (PEOPLE[key] ? `<span class="pill" style="--c:${PEOPLE[key
 const bar = (p, over) => `<div class="bar${over ? " over" : ""}"><i style="width:${Math.min(100, Math.max(0, p))}%"></i></div>`;
 const disabled = () => (state.canWrite ? "" : " disabled");
 
+// Every dropdown sits in a wrapper that draws the same chevron, tinted to match its text.
+const selectBox = (selectHTML, { pill = false, color = "", cls = "" } = {}) =>
+  `<span class="select${pill ? " is-pill" : ""}${cls ? " " + cls : ""}"${color ? ` style="--c:${color}"` : ""}>${selectHTML}</span>`;
+
 function personOptions(selected, withUnassigned = true) {
   const opts = withUnassigned ? [["", "Unassigned"]] : [];
   Object.entries(PEOPLE).forEach(([k, v]) => opts.push([k, v.name]));
   return opts.map(([v, l]) => `<option value="${v}"${(selected || "") === v ? " selected" : ""}>${l}</option>`).join("");
 }
 function partSelect(id, selected) {
-  return `<select id="${id}" class="field" name="part" aria-label="Part of the wedding">${Object.entries(PARTS).map(([k, v]) => `<option value="${k}"${k === selected ? " selected" : ""}>${v}</option>`).join("")}</select>`;
+  return selectBox(`<select id="${id}" class="field" name="part" aria-label="Part of the wedding">${Object.entries(PARTS).map(([k, v]) => `<option value="${k}"${k === selected ? " selected" : ""}>${v}</option>`).join("")}</select>`);
 }
 
 /* ===================== components ===================== */
@@ -534,7 +539,7 @@ function taskRow(t) {
     <button class="check${t.done ? " on" : ""}" style="--c:${checkColor}" data-action="toggle" data-id="${id}" aria-pressed="${!!t.done}" aria-label="${t.done ? "Mark not done" : "Mark done"}: ${esc(t.title)}"${disabled()}>${ICON.check}</button>
     <div class="task-body"><div class="task-title">${esc(t.title)}</div>${meta.length ? `<div class="task-meta">${meta.map((m) => `<span>${m}</span>`).join("")}</div>` : ""}</div>
     <div class="task-tools">
-      <select id="who-${id}" class="pill-select" style="--c:${personColor(t.who)}" data-change="task-who" data-id="${id}" aria-label="Who's on it"${disabled()}>${personOptions(t.who)}</select>
+      ${selectBox(`<select id="who-${id}" class="pill-select" data-change="task-who" data-id="${id}" aria-label="Who's on it"${disabled()}>${personOptions(t.who)}</select>`, { pill: true, color: personColor(t.who) })}
       ${state.canWrite ? `<button class="icon-btn" data-action="edit" data-id="task:${id}" aria-label="Edit task">${ICON.edit}</button><button class="icon-btn" data-action="delete" data-kind="tasks" data-id="${id}" aria-label="Delete task">${ICON.close}</button>` : ""}
     </div>
   </div>`;
@@ -554,7 +559,7 @@ function taskForm(part) {
   const scope = part || "all";
   return `<form class="composer glass quiet" data-form="add-task" autocomplete="off">
     <input id="add-task-title-${scope}" class="field grow" name="title" placeholder="Add a task, like “Book the hair trial”" aria-label="New task" required maxlength="200">
-    <select id="add-task-who-${scope}" class="field" name="who" aria-label="Who's on it">${personOptions(state.me)}</select>
+    ${selectBox(`<select id="add-task-who-${scope}" class="field" name="who" aria-label="Who's on it">${personOptions(state.me)}</select>`)}
     ${part ? `<input id="add-task-part-${scope}" type="hidden" name="part" value="${part}">` : partSelect("add-task-part-" + scope, "general")}
     <input id="add-task-due-${scope}" class="field date" type="date" name="due" aria-label="Due date">
     <div class="actions"><button class="btn">Add task</button></div>
@@ -583,7 +588,7 @@ function personCard(p) {
       <div><h3 class="card-name">${esc(p.name)}</h3>${p.role ? `<p class="card-deck">${esc(p.role)}</p>` : ""}</div>
       ${state.canWrite ? `<div class="card-tools"><button class="icon-btn" data-action="edit" data-id="person:${id}" aria-label="Edit ${esc(p.name)}">${ICON.edit}</button><button class="icon-btn" data-action="delete" data-kind="people" data-id="${id}" aria-label="Delete ${esc(p.name)}">${ICON.close}</button></div>` : ""}
     </div>
-    <select id="status-${id}" class="pill-select status-select" style="--c:${STATUSES[p.status] || "var(--lichen)"}" data-change="person-status" data-id="${id}" aria-label="Status"${disabled()}>${statuses.map((s) => `<option${(p.status || "Researching") === s ? " selected" : ""}>${esc(s)}</option>`).join("")}</select>
+    ${selectBox(`<select id="status-${id}" class="pill-select" data-change="person-status" data-id="${id}" aria-label="Status"${disabled()}>${statuses.map((s) => `<option${(p.status || "Researching") === s ? " selected" : ""}>${esc(s)}</option>`).join("")}</select>`, { pill: true, color: STATUSES[p.status] || "var(--lichen)", cls: "status" })}
     ${contact(p.email, "email")}${contact(p.phone, "phone number")}
     <input id="note-${id}" class="field note-field" data-change="person-note" data-id="${id}" value="${esc(p.note || "")}" placeholder="${state.canWrite ? "Add a note" : "No notes"}" aria-label="Notes about ${esc(p.name)}"${disabled()}>
   </article>`;
@@ -969,28 +974,12 @@ function renderSide() {
 
 function renderPhotos() {
   const el = $("#w-photos");
-  const photos = allPhotos();
-  const canAdd = !!assets && !!db && state.canWrite;
-  const canStyle = !!db && state.canWrite;
-  if (state.photoIndex >= photos.length) state.photoIndex = 0;
-
-  // Build the frame once per photo set, so renders only swap the controls and never interrupt a fade.
-  const signature = photos.map((p) => p.key).join("|") + `/${canAdd}/${canStyle}`;
-  if (signature !== photoSignature) {
-    photoSignature = signature; photoShown = ""; photoLayer = 0;
-    el.innerHTML = `<div class="photo"><img class="ph-layer" alt=""><img class="ph-layer" alt="">
-      ${canAdd ? `<button class="photo-add" data-action="add-photos">Add photo</button>` : ""}
-      <div class="photo-tools"><div class="photo-dots"></div><div class="photo-actions"></div></div></div>`;
-    photos.forEach((p) => { new Image().src = p.src; });   // warm the cache so fades never wait on the network
+  if (!el.firstChild) {
+    el.innerHTML = `<div class="photo"><img class="ph-layer" alt=""><img class="ph-layer" alt=""><div class="photo-dots"></div></div>`;
+    PHOTOS.forEach((p) => { new Image().src = p.src; });   // warm the cache so fades never wait on the network
   }
-
-  const p = photos[state.photoIndex];
-  const isBg = state.settings.background === p.key;
-  el.querySelector(".photo-dots").innerHTML = photos.map((_, i) => `<button data-action="photo" data-id="${i}" aria-label="Photo ${i + 1} of ${photos.length}" aria-current="${i === state.photoIndex}"></button>`).join("");
-  el.querySelector(".photo-actions").innerHTML = canStyle
-    ? `<button class="icon-btn" data-action="set-bg" data-id="${esc(p.key)}" aria-label="${isBg ? "Go back to the redwoods background" : "Use this photo as the background"}" aria-pressed="${isBg}">${ICON.image}</button>
-       ${p.uploaded ? `<button class="icon-btn" data-action="delete-photo" data-id="${esc(p.id)}" aria-label="Remove photo">${ICON.close}</button>` : ""}`
-    : "";
+  el.querySelector(".photo-dots").innerHTML = PHOTOS.map((_, i) => `<button data-action="photo" data-id="${i}" aria-label="Photo ${i + 1} of ${PHOTOS.length}" aria-current="${i === state.photoIndex}"></button>`).join("");
+  const p = PHOTOS[state.photoIndex];
   if (photoShown !== p.key) showPhoto(p);
 }
 
@@ -999,10 +988,10 @@ async function showPhoto(p) {
   const layers = $("#w-photos").querySelectorAll(".ph-layer");
   const incoming = layers[1 - photoLayer], outgoing = layers[photoLayer];
   incoming.src = p.src;
-  incoming.alt = p.caption || "Rachel and Xavier";
+  incoming.alt = p.caption;
   incoming.style.objectPosition = p.focus;
   try { await incoming.decode(); } catch (e) {}
-  if (photoShown !== p.key || !incoming.isConnected) return;   // a newer photo was picked meanwhile
+  if (photoShown !== p.key) return;   // a newer photo was picked meanwhile
   incoming.classList.add("on");
   outgoing.classList.remove("on");
   outgoing.alt = "";
@@ -1226,72 +1215,6 @@ async function copyText(btn) {
   }
 }
 
-/* ---------- photos ---------- */
-
-function downscale(file, maxEdge = 2400) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file), img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, maxEdge / Math.max(img.naturalWidth, img.naturalHeight));
-      const c = document.createElement("canvas");
-      c.width = Math.round(img.naturalWidth * scale); c.height = Math.round(img.naturalHeight * scale);
-      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(url);
-      c.toBlob((b) => (b ? resolve(b) : reject(new Error("encode"))), "image/jpeg", 0.86);
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("decode")); };
-    img.src = url;
-  });
-}
-
-function uploadError(e) {
-  switch (e && e.code) {
-    case "too_large": return "That photo is too big. Try a smaller copy.";
-    case "unsupported_type": return "That file type isn't supported. Use a JPEG or PNG.";
-    case "quota_or_state": return "Photo storage is full. Remove a photo and try again.";
-    case "rate_limited": return "Too many uploads at once. Wait a moment, then try again.";
-    case "upstream_auth": return "Your sign-in expired. Reload the page and try again.";
-    default: return "Couldn't upload that photo. Try again.";
-  }
-}
-
-async function addPhotos(files) {
-  if (!canWriteNow() || !assets) return;
-  let added = 0;
-  for (const file of files) {
-    let blob;
-    try { blob = await downscale(file); }
-    catch (e) { toast(`Couldn't read ${file.name}. Try saving it as a JPEG first.`, { bad: true }); continue; }
-    try {
-      const up = await assets.upload(blob, { type: "image/jpeg" });
-      const ok = await save(db.collection("photos").add({ asset: up.id, caption: "", addedBy: state.me || "", addedAt: Date.now() }));
-      if (ok) added++;
-    } catch (e) { toast(uploadError(e), { bad: true }); }
-  }
-  if (added) toast(added === 1 ? "Photo added" : `${added} photos added`);
-}
-
-async function deletePhoto(id) {
-  if (!canWriteNow()) return;
-  const p = state.photos.find((x) => x.id === id);
-  if (!p) return;
-  const updates = [];
-  if (state.settings.background === p.asset) updates.push(db.doc("settings/main").set({ ...state.settings, background: "" }));
-  if (!(await save(Promise.all([...updates, db.collection("photos").doc(id).delete()]), "Photo removed"))) return;
-  if (assets) assets.delete(p.asset).catch(() => {});
-}
-
-function setBackground(key) {
-  if (!canWriteNow()) return;
-  const next = state.settings.background === key ? "" : key;
-  save(db.doc("settings/main").set({ ...state.settings, background: next }), next ? "Background updated" : "Back to the redwoods");
-}
-
-function applyBackground() {
-  const chosen = allPhotos().find((p) => p.key && p.key === state.settings.background);
-  $("#scene").style.backgroundImage = chosen ? `var(--scrim), url("${chosen.src}")` : "";
-}
-
 /* ---------- Gmail ---------- */
 
 function watchMail(force) {
@@ -1364,16 +1287,8 @@ document.addEventListener("click", (e) => {
     case "refresh-mail": refreshMail(); break;
     case "allow-gmail": allowGmail(); break;
     case "close-drill": state.drill = null; render(); break;
-    case "add-photos": if (canWriteNow()) $("#photo-input").click(); break;
     case "photo": state.photoIndex = Number(id) || 0; renderPhotos(); break;
-    case "set-bg": setBackground(id); break;
-    case "delete-photo": deletePhoto(id); break;
   }
-});
-
-$("#photo-input").addEventListener("change", (e) => {
-  const files = [...e.target.files]; e.target.value = "";
-  if (files.length) addPhotos(files);
 });
 
 document.addEventListener("change", (e) => {
@@ -1453,16 +1368,20 @@ document.addEventListener("submit", async (e) => {
   render();
 });
 
-/* ---------- scroll: blur the chrome, slowly zoom the photo ---------- */
+/* ---------- scroll: cover the bar, slowly zoom the photo ---------- */
 
 let ticking = false;
 function onScroll() {
   const y = scrollY || 0;
   $("#chrome").classList.toggle("scrolled", y > 10);
-  if (!REDUCED_MOTION) $("#scene").style.transform = `scale(${1 + (Math.min(y, 700) / 700) * 0.12})`;
+  const zoom = REDUCED_MOTION ? "" : `scale(${1 + (Math.min(y, 700) / 700) * 0.12})`;
+  $("#scene").style.transform = zoom;
+  $("#chrome-scene").style.transform = zoom;
   ticking = false;
 }
+function sizeChromeScene() { $("#chrome-scene").style.height = $("#scene").offsetHeight + "px"; onScroll(); }
 addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+addEventListener("resize", sizeChromeScene);
 
 /* ---------- sidebar widgets take turns at the top ---------- */
 
@@ -1473,27 +1392,22 @@ function cycleWidgets() {
   const items = [...side.children].filter((el) => !el.hidden);
   if (items.length < 2) return;
   const [top, ...rest] = items;
-  const before = rest.map((el) => el.getBoundingClientRect().top);
-  const topStart = top.offsetTop;
-  Object.assign(top.style, { position: "absolute", left: "0", right: "0", top: topStart + "px", zIndex: "-1", transition: "none" });
-  side.appendChild(top);
-  rest.forEach((el, i) => { el.style.transition = "none"; el.style.transform = `translateY(${before[i] - el.getBoundingClientRect().top}px)`; });
-  const last = rest[rest.length - 1];
-  const finalTop = last.offsetTop + last.offsetHeight + 10;
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    top.style.transition = "transform .22s ease, opacity .22s ease";
-    top.style.transform = "translateY(-40px) scale(.92)"; top.style.opacity = "0";
-    rest.forEach((el) => { el.style.transition = "transform .5s cubic-bezier(.4,0,.2,1)"; el.style.transform = ""; });
-  }));
+  top.style.transition = "opacity .25s ease";
+  top.style.opacity = "0";
   setTimeout(() => {
-    top.style.transition = "none"; top.style.top = finalTop + "px"; top.style.transform = "translateY(16px) scale(.92)";
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      top.style.transition = "transform .32s cubic-bezier(.34,1.15,.64,1), opacity .32s ease";
-      top.style.transform = ""; top.style.opacity = "1";
-      setTimeout(() => { ["position", "left", "right", "top", "zIndex", "transform", "transition", "opacity"].forEach((p) => (top.style[p] = "")); rest.forEach((el) => (el.style.transition = "")); }, 340);
-    }));
-  }, 240);
+    const before = rest.map((el) => el.getBoundingClientRect().top);
+    side.appendChild(top);
+    rest.forEach((el, i) => { el.style.transition = "none"; el.style.transform = `translateY(${before[i] - el.getBoundingClientRect().top}px)`; });
+    void side.offsetHeight;
+    rest.forEach((el) => { el.style.transition = "transform .5s cubic-bezier(.4,0,.2,1)"; el.style.transform = ""; });
+    setTimeout(() => {
+      top.style.transition = "opacity .35s ease";
+      top.style.opacity = "";
+      setTimeout(() => items.forEach((el) => { el.style.transition = ""; }), 380);
+    }, 520);
+  }, 260);
 }
+
 function startCycle() {
   if (REDUCED_MOTION || cycleTimer || !matchMedia("(min-width: 861px)").matches) return;
   cycleTimer = setInterval(() => { if (!document.hidden) cycleWidgets(); }, 8000);
@@ -1505,7 +1419,7 @@ $("#side").addEventListener("mouseleave", startCycle);
 // photos rotate on their own, slower than the widgets
 setInterval(() => {
   if (document.hidden || $("#side").hidden || $("#w-photos").matches(":hover")) return;
-  state.photoIndex = (state.photoIndex + 1) % allPhotos().length;
+  state.photoIndex = (state.photoIndex + 1) % PHOTOS.length;
   renderPhotos();
 }, 9000);
 
@@ -1520,7 +1434,6 @@ function subscribe(path, key, { sort } = {}) {
     state[key] = rows;
     markLoaded(key);
     if (key === "people") watchMail();
-    if (key === "photos") applyBackground();
     render();
   }, onSyncError);
 }
@@ -1544,11 +1457,11 @@ async function boot() {
   if (TABS.some(([k]) => k === hash)) state.tab = hash;
   setGreeting(false);
   render();
-  onScroll();
+  sizeChromeScene();
   startCycle();
 
-  const [dbNs, mcpNs, userNs, assetsNs] = await Promise.all([use("db"), use("mcp"), use("user"), use("assets")]);
-  db = dbNs; mcp = mcpNs; assets = assetsNs;
+  const [dbNs, mcpNs, userNs] = await Promise.all([use("db"), use("mcp"), use("user")]);
+  db = dbNs; mcp = mcpNs;
   if (!db) { state.status = "offline"; watchMail(); render(); return; }
 
   // can() answers null when the platform hasn't said; keep the controls and let a refused write decide
@@ -1576,10 +1489,8 @@ async function boot() {
   subscribe("tasks", "tasks");
   subscribe("budget", "budget");
   subscribe("people", "people", { sort: (a, b) => String(a.name).localeCompare(String(b.name)) });
-  subscribe("photos", "photos", { sort: (a, b) => (a.addedAt || 0) - (b.addedAt || 0) });
   db.doc("settings/main").onSnapshot((snap) => {
     state.settings = snap.exists ? { ...snap.data() } : {};
-    applyBackground();
     render();
   }, onSyncError);
   watchMail();
