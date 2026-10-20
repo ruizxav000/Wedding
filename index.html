@@ -299,7 +299,7 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .hbar-track{fill:var(--glass-low)}
 .chart-text{fill:var(--ink-soft);font:400 11px var(--f-body)}
 .chart-num{fill:var(--mute);font:400 10.5px var(--f-mono)}
-.drill{margin-top:12px;overflow:hidden;transform-origin:top center;transition:opacity .16s ease,transform .16s ease}
+.drill{margin-top:12px;overflow:hidden;transition:height .38s cubic-bezier(.4,0,.2,1),margin-top .38s cubic-bezier(.4,0,.2,1),opacity .3s ease}
 .drill-hd{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:13px 12px 13px 18px;border-bottom:1px solid var(--hair)}
 .drill-title{font-size:14px;font-weight:600;color:var(--c)}
 .drill-hd .icon-btn{margin-left:auto}
@@ -1150,6 +1150,44 @@ function runDashAnimations() {
   }));
 }
 
+/* ---------- drill-down table: slides open, resizes between slices, slides closed ---------- */
+// Height and opacity only: a transform would unpin the glass background on desktop.
+
+const DRILL_MS = 380;
+let drillTimer = 0;
+function openDrill(type, key) {
+  clearTimeout(drillTimer);
+  const before = $("#drill");
+  const fromH = before ? before.offsetHeight : 0;
+  state.drill = { type, key };
+  render();
+  const el = $("#drill");
+  if (!el) return;
+  const reveal = () => el.scrollIntoView({ behavior: REDUCED_MOTION ? "auto" : "smooth", block: "nearest" });
+  if (REDUCED_MOTION) { reveal(); return; }
+  const toH = el.offsetHeight;
+  el.style.transition = "none";
+  el.style.height = fromH + "px";
+  if (!before) { el.style.opacity = "0"; el.style.marginTop = "0px"; }
+  void el.offsetHeight;
+  el.style.transition = "";
+  el.style.height = toH + "px";
+  el.style.opacity = "1";
+  el.style.marginTop = "";
+  drillTimer = setTimeout(() => { el.style.height = ""; reveal(); }, DRILL_MS);
+}
+function closeDrill() {
+  clearTimeout(drillTimer);
+  const el = $("#drill");
+  if (!el || REDUCED_MOTION) { state.drill = null; render(); return; }
+  el.style.height = el.offsetHeight + "px";
+  void el.offsetHeight;
+  el.style.height = "0px";
+  el.style.opacity = "0";
+  el.style.marginTop = "0px";
+  drillTimer = setTimeout(() => { state.drill = null; render(); }, DRILL_MS);
+}
+
 /* ---------- tooltip ---------- */
 
 const tooltip = $("#tooltip");
@@ -1317,9 +1355,7 @@ function refreshMail() {
 document.addEventListener("click", (e) => {
   const drill = e.target.closest && e.target.closest("[data-drill-type]");
   if (drill) {
-    state.drill = { type: drill.dataset.drillType, key: drill.dataset.drillKey };
-    render();
-    const d = $("#drill"); if (d) d.scrollIntoView({ behavior: REDUCED_MOTION ? "auto" : "smooth", block: "nearest" });
+    openDrill(drill.dataset.drillType, drill.dataset.drillKey);
     return;
   }
   const b = e.target.closest && e.target.closest("[data-action]");
@@ -1340,7 +1376,7 @@ document.addEventListener("click", (e) => {
     case "copy": copyText(b); break;
     case "refresh-mail": refreshMail(); break;
     case "allow-gmail": allowGmail(); break;
-    case "close-drill": state.drill = null; render(); break;
+    case "close-drill": closeDrill(); break;
     case "photo": state.photoIndex = Number(id) || 0; renderPhotos(); break;
   }
 });
