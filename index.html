@@ -77,7 +77,9 @@ option{background:var(--menu);color:var(--ink)}
 
 /* ---------- hero ---------- */
 .hero{max-width:1200px;margin:70px auto 0;padding-top:24px;padding-bottom:6px;padding-left:max(var(--gutter),env(safe-area-inset-left,0px));padding-right:max(var(--gutter),env(safe-area-inset-right,0px))}
-.greeting{font-size:clamp(2.1rem,5.2vw,2.9rem);font-weight:300;line-height:1.1;letter-spacing:-.03em;color:var(--white);text-wrap:balance;transition:opacity .25s ease}
+.greeting{max-width:22em;font-size:clamp(2.1rem,5.2vw,2.9rem);font-weight:300;line-height:1.12;letter-spacing:-.03em;color:var(--white);text-wrap:balance;transition:opacity .25s ease}
+.greeting.long{font-size:clamp(1.65rem,3.6vw,2.3rem);line-height:1.18;letter-spacing:-.02em}
+.quote-by{margin-top:8px;font:italic 500 1.08rem/1.3 var(--f-script);color:var(--lichen);letter-spacing:.01em;transition:opacity .25s ease}
 .greeting strong{font-weight:600}
 .hero-sub{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:10px;font-size:12.5px;letter-spacing:.02em;color:var(--mute)}
 .viewing{display:inline-flex;align-items:center;gap:6px}
@@ -356,7 +358,8 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 </header>
 
 <section class="hero">
-  <p class="greeting" id="greeting">Two celebrations, <strong>one plan.</strong></p>
+  <p class="greeting" id="greeting">Whatever our souls are made of, <strong>his and mine are the same.</strong></p>
+  <p class="quote-by" id="quote-by">Emily Brontë, Wuthering Heights</p>
   <div class="hero-sub" id="hero-sub"></div>
 </section>
 
@@ -408,14 +411,34 @@ const PEOPLE = {
 const UNASSIGNED_COLOR = "var(--mute)";
 const STATUSES = { "Researching": "var(--lichen)", "Contacted": "var(--fog)", "Booked": "var(--fern)", "Paid in full": "var(--gold)" };
 const TABS = [["home","Home"],["elopement","Elopement"],["reception","Reception"],["budget","Budget"],["people","People"],["inbox","Inbox"],["dashboard","Dashboard"]];
-const GREETINGS = {
-  home: ["Good {part}, <strong>{name}.</strong>", "Two celebrations, <strong>one plan.</strong>", "Here's where things stand, <strong>{name}.</strong>", "Let's knock a few out, <strong>{name}.</strong>"],
-  elopement: ["The redwoods, <strong>April 22.</strong>", "Just the two of you, <strong>under the redwoods.</strong>"],
-  reception: ["The Betty, <strong>July 9.</strong>", "150 people, <strong>one long Texas night.</strong>"],
-  budget: ["Where the <strong>money goes.</strong>", "Planned versus <strong>paid.</strong>"],
-  people: ["The people <strong>behind it all.</strong>", "Vendors, family <strong>and friends.</strong>"],
-  inbox: ["Straight from <strong>your vendors.</strong>", "What's new in <strong>the inbox.</strong>"],
-  dashboard: ["The <strong>big picture.</strong>", "How's it looking, <strong>{name}?</strong>", "Let's see where we stand, <strong>{name}.</strong>"],
+// Lines for the hero, all public domain and quoted from the source: [opening, emphasized ending, credit].
+const LOVE_LINES = [
+  ["Whatever our souls are made of, ", "his and mine are the same.", "Emily Brontë, Wuthering Heights"],
+  ["How do I love thee? ", "Let me count the ways.", "Elizabeth Barrett Browning, Sonnet 43"],
+  ["If ever two were one, ", "then surely we.", "Anne Bradstreet, To My Dear and Loving Husband"],
+  ["Grow old along with me! ", "The best is yet to be.", "Robert Browning, Rabbi Ben Ezra"],
+  ["I have for the first time found what I can truly love—", "I have found you.", "Charlotte Brontë, Jane Eyre"],
+  ["Love alters not with his brief hours and weeks, ", "but bears it out even to the edge of doom.", "Shakespeare, Sonnet 116"],
+  ["I am my beloved's, ", "and my beloved is mine.", "Song of Songs 6:3"],
+  ["Many waters cannot quench love, ", "neither can the floods drown it.", "Song of Songs 8:7"],
+  ["You pierce my soul. ", "I am half agony, half hope.", "Jane Austen, Persuasion"],
+  ["I cannot exist ", "without you.", "John Keats, letter to Fanny Brawne"],
+];
+const TAB_LINES = {
+  elopement: [
+    ["Whither thou goest, I will go; ", "and where thou lodgest, I will lodge.", "Ruth 1:16"],
+    ["Come live with me and be my love, ", "and we will all the pleasures prove.", "Christopher Marlowe, The Passionate Shepherd to His Love"],
+    ["Wild nights! Wild nights! Were I with thee, ", "wild nights should be our luxury!", "Emily Dickinson"],
+  ],
+  reception: [
+    ["Let me not to the marriage of true minds ", "admit impediments.", "Shakespeare, Sonnet 116"],
+    ["O my Luve's like a red, red rose, ", "that's newly sprung in June.", "Robert Burns, A Red, Red Rose"],
+    ["Two souls with but a single thought, ", "two hearts that beat as one.", "Friedrich Halm, Ingomar the Barbarian"],
+  ],
+  budget: [
+    ["The course of true love ", "never did run smooth.", "Shakespeare, A Midsummer Night's Dream"],
+    ["My bounty is as boundless as the sea, ", "my love as deep.", "Shakespeare, Romeo and Juliet"],
+  ],
 };
 const MAIL_RETRACT = new Set(["needs_reauth","server_not_connected","blocked_by_policy","approval_required","not_in_manifest","selection_required","not_granted","capability_disabled","capability_removed"]);
 const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -467,8 +490,6 @@ const fmtDay = (s, opts) => (s ? parseDay(s).toLocaleDateString("en-US", opts ||
 const fmtStamp = (ms) => new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 const decodeEntities = (s) => { const t = document.createElement("textarea"); t.innerHTML = s || ""; return t.value; };
 const personColor = (key) => (PEOPLE[key] ? PEOPLE[key].color : UNASSIGNED_COLOR);
-const viewerName = () => (PEOPLE[state.me] ? PEOPLE[state.me].name : "you two");
-const partOfDay = () => { const h = new Date().getHours(); return h < 12 ? "morning" : h < 18 ? "afternoon" : "evening"; };
 // The engagement photos ship with the page.
 const PHOTOS = [
   { key: "proposal", src: "photos/proposal.jpg", caption: "The proposal, under the red maple", focus: "42% 68%" },
@@ -1058,16 +1079,23 @@ function renderSub() {
 }
 
 function setGreeting(fade) {
-  const list = GREETINGS[state.tab] || GREETINGS.home;
-  const last = setGreeting.last || {};
+  const list = TAB_LINES[state.tab] || LOVE_LINES;
+  const key = TAB_LINES[state.tab] ? state.tab : "love";
+  const last = setGreeting.last || (setGreeting.last = {});
   let i;
-  do { i = Math.floor(Math.random() * list.length); } while (list.length > 1 && i === last[state.tab]);
-  last[state.tab] = i; setGreeting.last = last;
-  const html = list[i].replace("{name}", viewerName()).replace("{part}", partOfDay());
-  const g = $("#greeting");
-  if (!fade || REDUCED_MOTION) { g.innerHTML = html; return; }
-  g.style.opacity = "0";
-  setTimeout(() => { g.innerHTML = html; g.style.opacity = "1"; }, 260);
+  do { i = Math.floor(Math.random() * list.length); } while (list.length > 1 && i === last[key]);
+  last[key] = i;
+  const [lead, ending, credit] = list[i];
+  const show = () => {
+    const g = $("#greeting");
+    g.innerHTML = `${esc(lead)}<strong>${esc(ending)}</strong>`;
+    g.classList.toggle("long", (lead + ending).length > 52);
+    $("#quote-by").textContent = credit;
+  };
+  const els = [$("#greeting"), $("#quote-by")];
+  if (!fade || REDUCED_MOTION) { show(); return; }
+  els.forEach((el) => (el.style.opacity = "0"));
+  setTimeout(() => { show(); els.forEach((el) => (el.style.opacity = "1")); }, 260);
 }
 
 function setTab(tab, { scroll = true } = {}) {
@@ -1201,7 +1229,6 @@ function setMe(who) {
   state.me = who;
   try { localStorage.setItem("wedding-hq:me", who); } catch (e) {}
   if (db && uid) db.doc(`data/users/${uid}/profile`).set({ who }).catch(() => {});
-  setGreeting(true);
   render();
 }
 
@@ -1475,7 +1502,7 @@ async function boot() {
       if (PEOPLE[who] && who !== state.me) {
         state.me = who;
         try { localStorage.setItem("wedding-hq:me", who); } catch (e) {}
-        setGreeting(false); render();
+        render();
       } else if (!snap.exists && PEOPLE[state.me]) {
         db.doc(`data/users/${uid}/profile`).set({ who: state.me }).catch(() => {});
       }
