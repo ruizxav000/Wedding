@@ -863,11 +863,17 @@ function donutSVG(segs, kind, center) {
   const total = segs.reduce((s, x) => s + x.v, 0);
   let out = `<svg class="donut" viewBox="0 0 ${size} ${size}" role="img" aria-label="${esc(center.cap)}: ${segs.map((s) => `${s.name} ${s.label || s.v}`).join(", ")}">`;
   out += `<circle class="donut-track" cx="${c}" cy="${c}" r="${r}" fill="none" stroke-width="${sw}"/>`;
+  // Each slice is its own open arc, starting at 12 o'clock and running clockwise. Dashes on one shared circle
+  // bent at the circle's start point, leaving a notch wherever a slice ended there.
+  const at = (len) => { const a = -Math.PI / 2 + (len / C) * 2 * Math.PI; return `${(c + r * Math.cos(a)).toFixed(3)} ${(c + r * Math.sin(a)).toFixed(3)}`; };
   let offset = 0, delay = 0;
   segs.forEach((seg) => {
     if (!seg.v || !total) return;
     const len = (seg.v / total) * C, dur = Math.max(0.12, seg.v / total);
-    out += `<circle class="dseg" cx="${c}" cy="${c}" r="${r}" fill="none" stroke-width="${sw}" stroke-dasharray="${len.toFixed(2)} ${(C - len).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}" transform="rotate(-90 ${c} ${c})" data-circ="${C.toFixed(2)}"
+    const d = seg.v === total
+      ? `M${at(0)} A${r} ${r} 0 1 1 ${at(C / 2)} A${r} ${r} 0 1 1 ${at(C)}`
+      : `M${at(offset)} A${r} ${r} 0 ${len > C / 2 ? 1 : 0} 1 ${at(offset + len)}`;
+    out += `<path class="dseg" d="${d}" fill="none" stroke-width="${sw}" stroke-dasharray="${len.toFixed(2)} ${C.toFixed(2)}" data-circ="${C.toFixed(2)}"
       style="stroke:${seg.color};--dur:${dur.toFixed(2)}s;--delay:${delay.toFixed(2)}s"
       data-tip-name="${esc(seg.name)}" data-tip-val="${esc(seg.label || seg.v)}" data-tip-pct="${pct(seg.v, total)}" data-tip-color="${seg.color}"
       data-drill-type="${kind}" data-drill-key="${esc(seg.key)}"/>`;
