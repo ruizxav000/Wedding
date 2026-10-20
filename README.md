@@ -1,6 +1,6 @@
 # Wedding
 
-Rachel & Xavier's wedding HQ: one shared planner for the April 22, 2027 elopement in the redwoods, the July 9, 2027 morning ceremony at Chapel Dulcinea, and that night's reception at The Betty.
+Rachel & Xavier's wedding HQ: one shared planner for the April 22, 2027 elopement in the redwoods, the July 10, 2027 morning ceremony at Chapel Dulcinea, and that night's reception at The Betty.
 
 Published as a Claude artifact: https://claude.ai/artifact/Xird27xUvYWHYDDxiZhJ85
 
