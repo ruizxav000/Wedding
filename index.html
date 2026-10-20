@@ -392,6 +392,20 @@ const EVENTS = {
       ["Photos delivered", "Within 90 days, by July 21, 2027"],
     ],
   },
+  chapel: {
+    label: "Chapel", region: "Texas", date: "2027-07-09",
+    // from chapeldulcinea.org/policies-faq: confirm before booking, venue policies change
+    facts: [
+      ["Date", "Friday, July 9, 2027 · the morning of the reception"],
+      ["Place", "Chapel Dulcinea, 16221 Crystal Hills Dr, Austin, TX 78737"],
+      ["Reservation", "$500, non-refundable (Fridays are paid weddings)"],
+      ["Decor", "Light ribbons and flowers; nothing attached to the walls"],
+      ["Candles", "In glass, at the front only; no sparklers or sky lanterns"],
+      ["Petals", "Real petals only, swept up after; rice, confetti or fake petals cost $250"],
+      ["Food + drink", "None at the chapel; champagne or wine only at the Spence Diamond Pavilion, with a TABC-licensed server"],
+      ["Website", "chapeldulcinea.org", "https://chapeldulcinea.org/"],
+    ],
+  },
   reception: {
     label: "Reception", region: "Texas", date: "2027-07-09",
     facts: [
@@ -402,7 +416,7 @@ const EVENTS = {
     ],
   },
 };
-const PARTS = { elopement: "Elopement", reception: "Reception", general: "General" };
+const PARTS = { elopement: "Elopement", chapel: "Chapel", reception: "Reception", general: "General" };
 const PEOPLE = {
   xavier: { name: "Xavier", color: "var(--fog)" },
   rachel: { name: "Rachel", color: "var(--rose)" },
@@ -410,7 +424,7 @@ const PEOPLE = {
 };
 const UNASSIGNED_COLOR = "var(--mute)";
 const STATUSES = { "Researching": "var(--lichen)", "Contacted": "var(--fog)", "Booked": "var(--fern)", "Paid in full": "var(--gold)" };
-const TABS = [["home","Home"],["elopement","Elopement"],["reception","Reception"],["budget","Budget"],["people","People"],["inbox","Inbox"],["dashboard","Dashboard"]];
+const TABS = [["home","Home"],["elopement","Elopement"],["chapel","Chapel"],["reception","Reception"],["budget","Budget"],["people","People"],["inbox","Inbox"],["dashboard","Dashboard"]];
 // Lines for the hero, all public domain and quoted from the source: [opening, emphasized ending, credit].
 const LOVE_LINES = [
   ["Whatever our souls are made of, ", "his and mine are the same.", "Emily Brontë, Wuthering Heights"],
@@ -430,8 +444,12 @@ const TAB_LINES = {
     ["Come live with me and be my love, ", "and we will all the pleasures prove.", "Christopher Marlowe, The Passionate Shepherd to His Love"],
     ["Wild nights! Wild nights! Were I with thee, ", "wild nights should be our luxury!", "Emily Dickinson"],
   ],
-  reception: [
+  chapel: [
     ["Let me not to the marriage of true minds ", "admit impediments.", "Shakespeare, Sonnet 116"],
+    ["Set me as a seal upon thine heart, ", "as a seal upon thine arm.", "Song of Songs 8:6"],
+  ],
+  reception: [
+    ["O, she doth teach ", "the torches to burn bright!", "Shakespeare, Romeo and Juliet"],
     ["O my Luve's like a red, red rose, ", "that's newly sprung in June.", "Robert Burns, A Red, Red Rose"],
     ["Two souls with but a single thought, ", "two hearts that beat as one.", "Friedrich Halm, Ingomar the Barbarian"],
   ],
@@ -774,7 +792,7 @@ function eventView(key) {
   return `${notice()}
     <section class="event glass">
       <div><p class="eyebrow">${ev.label} · ${ev.region}</p><div class="count-n">${cd.n}</div><div class="count-l">${cd.label}</div></div>
-      <div class="facts">${facts.map(([l, v]) => `<div class="fact"><span class="fact-l">${l}</span><span class="fact-v">${esc(v)}</span></div>`).join("")}</div>
+      <div class="facts">${facts.map(([l, v, url]) => `<div class="fact"><span class="fact-l">${l}</span><span class="fact-v">${url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(v)}</a>` : esc(v)}</span></div>`).join("")}</div>
     </section>
     ${section("Tasks", plural(openCount, "open task"))}
     ${taskForm(key)}
@@ -901,7 +919,7 @@ function drillView() {
   </section>`;
 }
 
-const partColor = (k) => ({ elopement: "var(--fern)", reception: "var(--rose)", general: "var(--lichen)" }[k] || "var(--lichen)");
+const partColor = (k) => ({ elopement: "var(--fern)", chapel: "var(--gold)", reception: "var(--rose)", general: "var(--lichen)" }[k] || "var(--lichen)");
 
 function dashboardView() {
   const all = state.tasks, done = all.filter((t) => t.done), open = all.filter((t) => !t.done);
