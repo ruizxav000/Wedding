@@ -177,11 +177,11 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .due-soon{color:var(--gold)}
 .task-tools{display:flex;align-items:center;gap:2px;margin-left:auto}
 .task-tools .select{margin-right:6px}
-.check{flex:none;width:26px;height:26px;display:grid;place-items:center;border-radius:50%;border:1.5px solid var(--c);background:none;color:transparent;cursor:pointer;transition:background .15s,color .15s}
+.check{flex:none;width:26px;height:26px;padding:0;display:grid;place-items:center;border-radius:50%;border:1.5px solid var(--c);background:none;color:transparent;cursor:pointer;transition:background .15s,color .15s}
 .check:hover{color:var(--c);background:var(--glass-low)}
 .check.on{background:var(--c);color:var(--on-accent)}
 .check:disabled{cursor:default}
-.check svg{width:14px;height:14px}
+.check svg{display:block;width:14px;height:14px}
 
 /* ---------- quiet list ---------- */
 .quiet-list{padding:4px 20px}
