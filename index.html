@@ -217,6 +217,9 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .summary{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
 .summary-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.funds{margin-top:10px}
+.funds .stats{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:14px}
+.fund-name{font-size:14px;font-weight:600;color:var(--c)}
 .stat-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--lichen)}
 .stat-val{font-size:1.35rem;font-weight:600;letter-spacing:-.02em;color:var(--white);font-variant-numeric:tabular-nums;margin-top:2px;white-space:nowrap}
 .stat-sub{font-size:11px;color:var(--mute-faint)}
@@ -426,6 +429,11 @@ const EVENTS = {
   },
 };
 const PARTS = { elopement: "Elopement", chapel: "Chapel", reception: "Reception", general: "General" };
+// Who pays: the main budget from Rachel's dad, or Rachel and Xavier's own money. Items without one count as main.
+const FUNDS = {
+  main: { label: "Main budget", short: "Main", sub: "From Rachel's dad", color: "var(--gold)", totalKey: "budget" },
+  ours: { label: "Rachel & Xavier", short: "Ours", sub: "Our own money", color: "var(--fern)", totalKey: "budgetOurs" },
+};
 const PEOPLE = {
   xavier: { name: "Xavier", color: "var(--fog)" },
   rachel: { name: "Rachel", color: "var(--rose)" },
@@ -560,6 +568,11 @@ const disabled = () => (state.canWrite ? "" : " disabled");
 const selectBox = (selectHTML, { pill = false, color = "", cls = "" } = {}) =>
   `<span class="select${pill ? " is-pill" : ""}${cls ? " " + cls : ""}"${color ? ` style="--c:${color}"` : ""}>${selectHTML}</span>`;
 
+const fundOf = (i) => (i.fund === "ours" ? "ours" : "main");
+const fundTotal = (f) => Number(state.settings[FUNDS[f].totalKey]) || 0;
+const fundItems = (f) => state.budget.filter((i) => fundOf(i) === f);
+const fundOptions = (selected) => Object.entries(FUNDS).map(([k, v]) => `<option value="${k}"${k === selected ? " selected" : ""}>${v.label}</option>`).join("");
+
 function personOptions(selected, withUnassigned = true) {
   const opts = withUnassigned ? [["", "Unassigned"]] : [];
   Object.entries(PEOPLE).forEach(([k, v]) => opts.push([k, v.name]));
@@ -674,6 +687,7 @@ function itemCard(i) {
       <div><h3 class="card-name">${esc(i.name)}</h3><p class="card-deck">${paid >= planned && planned > 0 ? "Paid in full" : planned ? `${money(planned - paid)} left to pay` : "No amount planned"}</p></div>
       ${state.canWrite ? `<div class="card-tools"><button class="icon-btn" data-action="edit" data-id="item:${id}" aria-label="Edit ${esc(i.name)}">${ICON.edit}</button><button class="icon-btn" data-action="delete" data-kind="budget" data-id="${id}" aria-label="Delete ${esc(i.name)}">${ICON.close}</button></div>` : ""}
     </div>
+    ${selectBox(`<select id="fund-${id}" class="pill-select" data-change="item-fund" data-id="${id}" aria-label="Paid from"${disabled()}>${fundOptions(fundOf(i))}</select>`, { pill: true, color: FUNDS[fundOf(i)].color, cls: "status" })}
     <div class="figs"><span>Planned <b>${money(planned)}</b></span><label for="paid-${id}">Paid <input id="paid-${id}" class="field num" type="number" min="0" step="0.01" inputmode="decimal" value="${paid || ""}" placeholder="0" data-change="item-paid" data-id="${id}"${disabled()}></label></div>
     ${bar(pct(paid, planned), paid > planned && planned > 0)}
     ${i.note ? `<p class="card-note">${esc(i.note)}</p>` : ""}
@@ -685,6 +699,7 @@ function itemEditForm(i) {
     <input id="edit-item-name" class="field grow" name="name" value="${esc(i.name)}" aria-label="Item" required maxlength="120">
     <input id="edit-item-planned" class="field num" type="number" min="0" step="0.01" inputmode="decimal" name="planned" value="${Number(i.planned) || ""}" placeholder="Planned $" aria-label="Planned amount">
     ${partSelect("edit-item-part", i.part || "general")}
+    ${selectBox(`<select id="edit-item-fund" class="field" name="fund" aria-label="Paid from">${fundOptions(fundOf(i))}</select>`)}
     <input id="edit-item-note" class="field grow" name="note" value="${esc(i.note || "")}" placeholder="Note" aria-label="Note" maxlength="300">
     <div class="actions"><button type="button" class="btn ghost" data-action="cancel">Cancel</button><button class="btn">Save</button></div>
   </form>`;
@@ -696,6 +711,7 @@ function itemForm() {
     <input id="add-item-name" class="field grow" name="name" placeholder="Venue, flowers, rings…" aria-label="Budget item" required maxlength="120">
     <input id="add-item-planned" class="field num" type="number" min="0" step="0.01" inputmode="decimal" name="planned" placeholder="Planned $" aria-label="Planned amount">
     ${partSelect("add-item-part", "general")}
+    ${selectBox(`<select id="add-item-fund" class="field" name="fund" aria-label="Paid from">${fundOptions("main")}</select>`)}
     <input id="add-item-note" class="field grow" name="note" placeholder="Note" aria-label="Note" maxlength="300">
     <div class="actions"><button class="btn">Add item</button></div>
   </form>`;
@@ -811,29 +827,33 @@ function eventView(key) {
     <div style="margin-top:12px">${personForm(key)}</div>`;
 }
 
-function budgetView() {
-  const total = Number(state.settings.budget) || 0;
-  const planned = sum(state.budget, "planned"), paid = sum(state.budget, "paid");
+function fundSummary(f) {
+  const F = FUNDS[f], items = fundItems(f), total = fundTotal(f);
+  const planned = sum(items, "planned"), paid = sum(items, "paid");
   const stat = (lbl, val, sub = "") => `<div><p class="stat-lbl">${lbl}</p><p class="stat-val">${val}</p>${sub ? `<p class="stat-sub">${sub}</p>` : ""}</div>`;
+  return `<section class="summary glass">
+    <div class="summary-top">
+      <div><p class="fund-name" style="--c:${F.color}">${F.label}</p><p class="stat-sub">${F.sub}</p></div>
+      <input id="total-${f}" class="field num" type="number" min="0" step="100" inputmode="decimal" value="${total || ""}" placeholder="Set a total" aria-label="${F.label} total" data-change="fund-total" data-id="${f}"${disabled()}>
+    </div>
+    ${total ? bar(pct(planned, total), planned > total) : ""}
+    <div class="stats">
+      ${stat("Planned", money(planned), total ? `${pct(planned, total)}% of the total` : "Set a total to compare")}
+      ${stat("Paid", money(paid), planned ? `${pct(paid, planned)}% of planned` : "")}
+      ${stat("Left to pay", money(Math.max(0, planned - paid)))}
+      ${stat(total && planned > total ? "Over budget" : "Unallocated", total ? money(Math.abs(total - planned)) : "—")}
+    </div>
+  </section>`;
+}
+
+function budgetView() {
   const groups = Object.keys(PARTS).map((k) => {
     const items = state.budget.filter((i) => (PARTS[i.part] ? i.part : "general") === k);
     if (!items.length) return "";
     return section(PARTS[k], `${money(sum(items, "paid"))} paid of ${money(sum(items, "planned"))}`) + `<div class="grid2">${items.map(itemCard).join("")}</div>`;
   }).join("");
   return `${notice()}
-    <section class="summary glass" style="margin-top:10px">
-      <div class="summary-top">
-        <label class="stat-lbl" for="budget-total">Total budget</label>
-        <input id="budget-total" class="field num" type="number" min="0" step="100" inputmode="decimal" value="${total || ""}" placeholder="Set a total" data-change="budget-total"${disabled()}>
-      </div>
-      ${total ? bar(pct(planned, total), planned > total) : ""}
-      <div class="stats">
-        ${stat("Planned", money(planned), total ? `${pct(planned, total)}% of the total` : "Set a total to compare")}
-        ${stat("Paid", money(paid), planned ? `${pct(paid, planned)}% of planned` : "")}
-        ${stat("Left to pay", money(Math.max(0, planned - paid)))}
-        ${stat(total && planned > total ? "Over budget" : "Unallocated", total ? money(Math.abs(total - planned)) : "—")}
-      </div>
-    </section>
+    <div class="grid2 funds">${Object.keys(FUNDS).map(fundSummary).join("")}</div>
     ${groups || `<div style="margin-top:14px">${empty("No budget items yet. Add the venue, photographer and the rest below.")}</div>`}
     ${section("Add an item")}
     ${itemForm()}`;
@@ -940,14 +960,14 @@ function dashboardView() {
   const all = state.tasks, done = all.filter((t) => t.done), open = all.filter((t) => !t.done);
   const overdue = open.filter((t) => t.due && daysUntil(t.due) < 0).length;
   const thisWeek = open.filter((t) => t.due && daysUntil(t.due) >= 0 && daysUntil(t.due) < 7).length;
-  const total = Number(state.settings.budget) || 0, planned = sum(state.budget, "planned"), paid = sum(state.budget, "paid");
+  const total = fundTotal("main") + fundTotal("ours"), planned = sum(state.budget, "planned"), paid = sum(state.budget, "paid");
   const next = ["elopement", "reception"].map((k) => ({ k, d: daysUntil(EVENTS[k].date) })).find((x) => x.d >= 0);
 
   const kpis = [
     ["Tasks done", `${done.length}/${all.length}`, all.length ? `${pct(done.length, all.length)}% complete` : "no tasks yet", ""],
     ["Open", open.length, overdue ? `${overdue} overdue` : "none overdue", overdue ? "var(--alert)" : ""],
     ["Due this week", thisWeek, "next 7 days", thisWeek ? "var(--gold)" : ""],
-    ["Planned", moneyShort(planned), total ? `of ${money(total)} budget` : "no total set", "var(--fog)"],
+    ["Planned", moneyShort(planned), `${moneyShort(sum(fundItems("main"), "planned"))} main · ${moneyShort(sum(fundItems("ours"), "planned"))} ours`, "var(--fog)"],
     ["Paid", moneyShort(paid), `${money(Math.max(0, planned - paid))} to go`, "var(--fern)"],
     ["Countdown", next ? `${next.d}d` : "—", next ? `to the ${next.k}` : "both celebrated", ""],
   ];
@@ -997,16 +1017,18 @@ function dashboardView() {
 
 function renderSide() {
   const open = state.tasks.filter((t) => !t.done);
-  const total = Number(state.settings.budget) || 0, planned = sum(state.budget, "planned"), paid = sum(state.budget, "paid");
+  const total = fundTotal("main") + fundTotal("ours"), planned = sum(state.budget, "planned"), paid = sum(state.budget, "paid");
 
   $("#w-countdown").innerHTML = `<p class="wlabel">Countdown</p><hr class="wdiv">` + ["elopement", "reception"].map((k) => {
     const cd = countdown(EVENTS[k].date);
     return `<div class="cd-row"><div><div class="cd-n">${cd.n}</div><div class="cd-l">${typeof cd.n === "number" ? `${cd.label} · ${k}` : `${EVENTS[k].label}: ${cd.label}`}</div></div><span class="cd-date">${fmtDay(EVENTS[k].date, { month: "short", day: "numeric" })}</span></div>`;
   }).join("");
 
+  const split = Object.keys(FUNDS).map((f) => `${FUNDS[f].short} ${money(sum(fundItems(f), "planned"))}`).join(" · ");
   $("#w-money").innerHTML = `<p class="now-label">Budget · planned so far</p>
     <p class="now-val">${money(planned)}</p>
     <p class="now-change">${money(paid)} paid · ${pct(paid, planned)}%</p>
+    <p class="now-sub">${split}</p>
     <p class="now-sub">${total ? `of ${money(total)} total · ${planned > total ? money(planned - total) + " over" : money(total - planned) + " unallocated"}` : "Set a total on the Budget tab"}</p>`;
 
   const t0 = startOfToday(), rows = [];
@@ -1389,6 +1411,12 @@ document.addEventListener("click", (e) => {
 
 document.addEventListener("change", (e) => {
   const el = e.target, kind = el.dataset && el.dataset.change;
+  // new budget items: the elopement is mostly paid from our own money, unless someone picked a budget already
+  if (el.id === "add-item-fund") el.dataset.picked = "1";
+  if (el.id === "add-item-part") {
+    const fund = document.getElementById("add-item-fund");
+    if (fund && !fund.dataset.picked) fund.value = el.value === "elopement" ? "ours" : "main";
+  }
   if (!kind) return;
   if (el.tagName === "SELECT") el.blur();
   if (!canWriteNow()) { render(); return; }
@@ -1403,10 +1431,12 @@ document.addEventListener("change", (e) => {
       if (item && num(el.value) !== (Number(item.paid) || 0)) save(db.collection("budget").doc(id).update({ paid: num(el.value) }));
       break;
     }
-    case "budget-total": {
-      if (num(el.value) !== (Number(state.settings.budget) || 0)) save(db.doc("settings/main").set({ ...state.settings, budget: num(el.value) }), "Total budget saved");
+    case "fund-total": {
+      const F = FUNDS[id];
+      if (F && num(el.value) !== fundTotal(id)) save(db.doc("settings/main").set({ ...state.settings, [F.totalKey]: num(el.value) }), `${F.label} total saved`);
       break;
     }
+    case "item-fund": save(db.collection("budget").doc(id).update({ fund: FUNDS[el.value] ? el.value : "main" })); break;
   }
 });
 
@@ -1437,7 +1467,7 @@ document.addEventListener("submit", async (e) => {
       break;
     case "add-item":
       if (!str(d.name)) return;
-      ok = await save(db.collection("budget").add({ name: str(d.name), planned: num(d.planned), paid: 0, part, note: str(d.note) }), "Budget item added");
+      ok = await save(db.collection("budget").add({ name: str(d.name), planned: num(d.planned), paid: 0, part, fund: FUNDS[d.fund] ? d.fund : "main", note: str(d.note) }), "Budget item added");
       break;
     case "edit-task":
       ok = await save(db.collection("tasks").doc(id).update({ title: str(d.title), part, due: d.due || "" }), "Saved");
@@ -1446,7 +1476,7 @@ document.addEventListener("submit", async (e) => {
       ok = await save(db.collection("people").doc(id).update({ name: str(d.name), role: str(d.role), email: str(d.email), phone: str(d.phone), part }), "Saved");
       break;
     case "edit-item":
-      ok = await save(db.collection("budget").doc(id).update({ name: str(d.name), planned: num(d.planned), part, note: str(d.note) }), "Saved");
+      ok = await save(db.collection("budget").doc(id).update({ name: str(d.name), planned: num(d.planned), part, fund: FUNDS[d.fund] ? d.fund : "main", note: str(d.note) }), "Saved");
       break;
   }
   if (!ok) return;
