@@ -252,6 +252,7 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .wk-row.today .wk-desc{font-weight:500}
 .wk-row.empty-day .wk-desc{color:var(--mute-faint)}
 .wk-dot{flex:none;width:5px;height:5px;border-radius:50%;background:var(--fern);align-self:center}
+.reminder{margin:2px 0;font:italic 500 1.32rem/1.35 var(--f-script);color:var(--ink);text-wrap:balance}
 .load-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--hair-faint)}
 .load-row:last-child{border-bottom:0}
 .load-row b{font:400 12px var(--f-mono);color:var(--white)}
@@ -367,6 +368,7 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
   <main id="main"></main>
   <aside class="side" id="side" aria-label="At a glance">
     <div class="widget glass" id="w-countdown"></div>
+    <div class="widget glass" id="w-reminder"><p class="reminder">“A wedding is a ceremony between two people, not a performance for the audience and guests.”</p></div>
     <div class="widget glass fog" id="w-money"></div>
     <div class="widget glass photo-card" id="w-photos"></div>
     <div class="widget glass" id="w-week"></div>
