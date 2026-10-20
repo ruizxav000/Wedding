@@ -12,6 +12,7 @@
   --page-grad:linear-gradient(150deg,#0E1C14 0%,#17201A 55%,#261B12 100%);
   --scrim:linear-gradient(180deg,rgba(8,13,9,.64) 0%,rgba(8,13,9,.76) 100%);
   --chrome:rgba(9,15,10,.58);
+  --chrome-touch:rgba(9,15,10,.95);
   --ink:#F2F0E6;
   --ink-soft:rgba(242,240,230,.78);
   --white:#FFFFFF;
@@ -342,6 +343,12 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
   .composer .actions{margin-left:0}
   .field.num,.field.date{flex:1 1 120px}
+}
+/* Phones and tablets ignore pinned (fixed) backgrounds and stretch the blurred copy over each card,
+   so on touch screens the glass blurs live instead. Mobile Safari draws that cleanly. */
+@media (hover:none) and (pointer:coarse){
+  .glass,.kpi{background:linear-gradient(var(--tint),var(--tint));backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
+  .chrome-bg{background:var(--chrome-touch);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before{transition:none!important;animation:none!important}
