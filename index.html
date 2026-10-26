@@ -336,6 +336,40 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 #toast .msg{padding-right:8px}
 #toast button{flex:none;font-size:12px;font-weight:500;background:var(--glass-hi);border:0;border-radius:99px;padding:4px 12px;cursor:var(--cursor-hand)}
 
+/* ---------- schedules: week of (one row per day) and day of (a timeline) ---------- */
+.sched{padding:4px 20px}
+.sd{display:grid;grid-template-columns:112px minmax(0,1fr);gap:4px 16px;padding:12px 0;border-bottom:1px solid var(--hair-faint)}
+.sd:last-child{border-bottom:0}
+.sd-when{display:flex;flex-direction:column;line-height:1.3;padding-top:5px}
+.sd-dow{font-size:13px;font-weight:500;color:var(--ink)}
+.sd-date{font-size:12px;color:var(--mute)}
+.sd.is-big .sd-dow{color:var(--gold)}
+.sd-tag{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-top:3px}
+.sd-items{display:flex;flex-direction:column;min-width:0}
+.sd-none{font-size:12.5px;color:var(--mute-faint);padding-top:5px}
+.s-row{display:flex;align-items:flex-start;gap:4px 10px;padding:4px 0}
+.s-time{flex:none;min-width:64px;font-size:12px;color:var(--lichen);padding-top:2px}
+.s-body{flex:1 1 auto;min-width:0;padding-top:1px}
+.s-title{font-size:13.5px;color:var(--ink);overflow-wrap:anywhere}
+.s-note{font-size:12px;color:var(--mute);overflow-wrap:anywhere}
+.s-side{flex:none;display:flex;align-items:center;gap:6px}
+.s-tools{display:flex;opacity:0;transition:opacity .15s}
+.s-row:hover .s-tools,.s-row:focus-within .s-tools,.tl-row:hover .s-tools,.tl-row:focus-within .s-tools{opacity:1}
+.s-tools .icon-btn{width:26px;height:26px}
+.s-tools .icon-btn svg{width:13px;height:13px}
+.s-edit{margin:6px 0;padding:10px;background:var(--glass-low);border-radius:10px}
+.tl{padding:8px 20px}
+.tl-row{display:grid;grid-template-columns:96px 12px minmax(0,1fr) auto;gap:0 14px;align-items:start;padding:10px 0}
+.tl-row .s-edit{grid-column:1/-1}
+.tl-time{text-align:right;font-size:12.5px;color:var(--lichen);padding-top:1px}
+.tl-dot{position:relative;align-self:stretch}
+.tl-dot::before{content:"";position:absolute;left:1.5px;top:5px;width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 0 3px rgba(9,15,10,.55);z-index:1}
+.tl-dot::after{content:"";position:absolute;left:5.5px;top:9px;width:1px;height:calc(100% + 20px);background:var(--hair)}
+.tl-row:last-child .tl-dot::after{display:none}
+.tl-title{font-size:14px;color:var(--ink);overflow-wrap:anywhere}
+.tl-note{font-size:12.5px;color:var(--mute);overflow-wrap:anywhere}
+.tl-row .s-side{padding-top:0}
+
 /* ---------- small screens ---------- */
 @media (max-width:860px){
   :root{--gutter:16px}
@@ -354,11 +388,22 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
   .composer .actions{margin-left:0}
   .field.num,.field.date{flex:1 1 120px}
+  .sched,.tl{padding-inline:14px}
+  .sd{grid-template-columns:minmax(0,1fr);gap:2px}
+  .sd-when{flex-direction:row;align-items:baseline;gap:8px;padding-top:0}
+  .tl-row{grid-template-columns:62px 12px minmax(0,1fr);gap:0 10px}
+  .tl-row .s-side{grid-column:3;justify-content:flex-start}
+  .s-row{flex-wrap:wrap}
+  .s-row .s-body{flex:1 1 160px}
+  .s-row .s-side{margin-left:auto}
+  .s-row .s-time{min-width:0}
+  .s-side:not(:has(.pill)):not(:has(.s-tools)){display:none}
 }
 /* Phones and tablets ignore pinned (fixed) backgrounds and stretch the blurred copy over each card,
    so on touch screens the glass blurs live instead. Mobile Safari draws that cleanly. */
 @media (hover:none) and (pointer:coarse){
   .glass,.kpi{background:linear-gradient(var(--tint),var(--tint));backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
+  .s-tools{opacity:1}
   .chrome-bg{background:var(--chrome-touch);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
 }
 @media (prefers-reduced-motion:reduce){
@@ -442,6 +487,12 @@ const EVENTS = {
     ],
   },
 };
+// Schedules on the Elopement and Reception pages. Items live in the "schedule" collection:
+// {part, kind: "week"|"day", day (week items only), time (free text, like "10:30 am" or "Sunrise"), title, note, who, order}.
+const SCHEDULES = {
+  elopement: { from: "2027-04-16", to: "2027-04-26", dayMeta: "The Cardinals: 8 hours · sunrise 6:27 am, sunset 8:03 pm in Crescent City" },
+  reception: { from: "2027-07-09", to: "2027-07-11", dayMeta: "Chapel in the morning, The Betty at night" },
+};
 const PARTS = { elopement: "Elopement", chapel: "Chapel", reception: "Reception", general: "General" };
 // Who pays: the main budget from Rachel's dad, or Rachel and Xavier's own money. Items without one count as main.
 const FUNDS = {
@@ -493,6 +544,8 @@ const MAIL_RETRACT = new Set(["needs_reauth","server_not_connected","blocked_by_
 const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const ICON = {
+  up: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 10l4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  down: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   check: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   edit: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 2.5l3 3-8 8h-3v-3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
   close: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
@@ -505,12 +558,12 @@ const state = {
   tab: "home",
   filter: "all",
   me: "",
-  tasks: [], budget: [], people: [], settings: {},
+  tasks: [], budget: [], people: [], schedule: [], settings: {},
   loaded: new Set(),
   status: "loading",      // loading | live | offline
   canWrite: true,
   writeUnknown: false,
-  editing: "",            // "task:<id>" | "item:<id>" | "person:<id>"
+  editing: "",            // "task:<id>" | "item:<id>" | "person:<id>" | "sched:<id>"
   drill: null,            // {type, key} on the dashboard
   photoIndex: 0,
   mail: { status: "off", threads: [], code: "", storedAt: 0 },
@@ -836,9 +889,101 @@ function eventView(key) {
     ${section("Tasks", plural(openCount, "open task"))}
     ${taskForm(key)}
     <div class="stack">${tasks.map(taskRow).join("") || empty(`No ${ev.label.toLowerCase()} tasks yet. Add the first one above.`)}</div>
+    ${schedSections(key)}
     ${section("People", people.length ? plural(people.length, "person") : "")}
     ${people.length ? `<div class="grid2">${people.map(personCard).join("")}</div>` : empty(`Add the vendors and people helping with the ${ev.label.toLowerCase()}.`)}
     <div style="margin-top:12px">${personForm(key)}</div>`;
+}
+
+/* ---------- schedules ---------- */
+
+const schedDays = (part) => {
+  const cfg = SCHEDULES[part], days = [];
+  let from = cfg.from, to = cfg.to;
+  state.schedule.forEach((x) => { if (x.part === part && x.kind === "week" && x.day) { if (x.day < from) from = x.day; if (x.day > to) to = x.day; } });
+  for (let d = parseDay(from); isoDay(d) <= to; d.setDate(d.getDate() + 1)) days.push(isoDay(d));
+  return days;
+};
+// one ordered list per day (week) or for the whole day-of plan
+const schedGroup = (x) => state.schedule
+  .filter((y) => y.part === x.part && y.kind === x.kind && (x.kind !== "week" || y.day === x.day))
+  .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0) || (a.createdAt || 0) - (b.createdAt || 0));
+const dayOptions = (part, selected) => schedDays(part).map((d) => `<option value="${d}"${d === selected ? " selected" : ""}>${fmtDay(d, { weekday: "short", month: "short", day: "numeric" })}</option>`).join("");
+
+function schedTools(x, group) {
+  if (!state.canWrite) return "";
+  const id = esc(x.id), i = group.indexOf(x);
+  return `<div class="s-tools">
+    ${i > 0 ? `<button class="icon-btn" data-action="sched-move" data-dir="-1" data-id="${id}" aria-label="Move earlier">${ICON.up}</button>` : ""}
+    ${i < group.length - 1 ? `<button class="icon-btn" data-action="sched-move" data-dir="1" data-id="${id}" aria-label="Move later">${ICON.down}</button>` : ""}
+    <button class="icon-btn" data-action="edit" data-id="sched:${id}" aria-label="Edit">${ICON.edit}</button>
+    <button class="icon-btn" data-action="delete" data-kind="schedule" data-id="${id}" aria-label="Delete">${ICON.close}</button>
+  </div>`;
+}
+
+function schedEditForm(x) {
+  const id = esc(x.id);
+  return `<form class="composer s-edit" data-form="edit-sched" data-id="${id}" autocomplete="off">
+    ${x.kind === "week" ? selectBox(`<select id="edit-sched-day" class="field" name="day" aria-label="Day">${dayOptions(x.part, x.day)}</select>`) : ""}
+    <input id="edit-sched-time" class="field" style="width:130px" name="time" value="${esc(x.time || "")}" placeholder="Time" aria-label="Time" maxlength="40">
+    <input id="edit-sched-title" class="field grow" name="title" value="${esc(x.title)}" aria-label="What's happening" required maxlength="200">
+    <input id="edit-sched-note" class="field grow" name="note" value="${esc(x.note || "")}" placeholder="Note" aria-label="Note" maxlength="300">
+    ${selectBox(`<select id="edit-sched-who" class="field" name="who" aria-label="Who">${personOptions(x.who)}</select>`)}
+    <div class="actions"><button type="button" class="btn ghost" data-action="cancel">Cancel</button><button class="btn">Save</button></div>
+  </form>`;
+}
+
+function schedForm(part, kind) {
+  if (!state.canWrite) return "";
+  const k = `${part}-${kind}`;
+  return `<form class="composer glass quiet" data-form="add-sched" autocomplete="off">
+    <input type="hidden" name="part" value="${part}"><input type="hidden" name="kind" value="${kind}">
+    ${kind === "week" ? selectBox(`<select id="add-sched-day-${k}" class="field" name="day" aria-label="Day">${dayOptions(part, EVENTS[part].date)}</select>`) : ""}
+    <input id="add-sched-time-${k}" class="field" style="width:130px" name="time" placeholder="${kind === "week" ? "Time, optional" : "Time"}" aria-label="Time" maxlength="40">
+    <input id="add-sched-title-${k}" class="field grow" name="title" placeholder="${kind === "week" ? "Add a plan" : "Add a moment"}" aria-label="What's happening" required maxlength="200">
+    <input id="add-sched-note-${k}" class="field grow" name="note" placeholder="Note, optional" aria-label="Note" maxlength="300">
+    <div class="actions"><button class="btn">Add</button></div>
+  </form>`;
+}
+
+function weekView(part) {
+  const wedding = EVENTS[part].date;
+  const rows = schedDays(part).map((d) => {
+    const items = schedGroup({ part, kind: "week", day: d });
+    const big = d === wedding;
+    return `<div class="sd${big ? " is-big" : ""}">
+      <div class="sd-when"><span class="sd-dow">${fmtDay(d, { weekday: "long" })}</span><span class="sd-date">${fmtDay(d, { month: "short", day: "numeric" })}</span>${big ? `<span class="sd-tag">Wedding day</span>` : ""}</div>
+      <div class="sd-items">${items.map((x) => state.editing === "sched:" + x.id ? schedEditForm(x) : `<div class="s-row">
+          ${x.time ? `<span class="s-time">${esc(x.time)}</span>` : ""}
+          <div class="s-body"><div class="s-title">${esc(x.title)}</div>${x.note ? `<div class="s-note">${esc(x.note)}</div>` : ""}</div>
+          <div class="s-side">${PEOPLE[x.who] ? pill(x.who) : ""}${schedTools(x, items)}</div>
+        </div>`).join("") || `<div class="sd-none">Nothing planned yet</div>`}</div>
+    </div>`;
+  }).join("");
+  return `<div class="sched glass">${rows}</div>`;
+}
+
+function dayView(part) {
+  const items = schedGroup({ part, kind: "day" });
+  if (!items.length) return empty("Nothing on the day-of plan yet. Add the first moment below.");
+  return `<div class="tl glass">${items.map((x) => state.editing === "sched:" + x.id ? `<div class="tl-row">${schedEditForm(x)}</div>` : `<div class="tl-row">
+      <span class="tl-time">${esc(x.time || "")}</span>
+      <span class="tl-dot" style="--c:${partColor(part)}"></span>
+      <div><div class="tl-title">${esc(x.title)}</div>${x.note ? `<div class="tl-note">${esc(x.note)}</div>` : ""}</div>
+      <div class="s-side">${PEOPLE[x.who] ? pill(x.who) : ""}${schedTools(x, items)}</div>
+    </div>`).join("")}</div>`;
+}
+
+function schedSections(part) {
+  if (!SCHEDULES[part]) return "";
+  const cfg = SCHEDULES[part];
+  const range = `${fmtDay(cfg.from, { month: "short", day: "numeric" })} to ${fmtDay(cfg.to, { month: "short", day: "numeric" })}`;
+  return `${section("Week of", range)}
+    ${weekView(part)}
+    <div style="margin-top:12px">${schedForm(part, "week")}</div>
+    ${section("Day of", esc(cfg.dayMeta))}
+    ${dayView(part)}
+    <div style="margin-top:12px">${schedForm(part, "day")}</div>`;
 }
 
 function fundSummary(f) {
@@ -1306,8 +1451,8 @@ function canWriteNow() {
   return true;
 }
 
-const COLLECTION_LABEL = { tasks: "Task", budget: "Budget item", people: "Person" };
-const STATE_KEY = { tasks: "tasks", budget: "budget", people: "people" };
+const COLLECTION_LABEL = { tasks: "Task", budget: "Budget item", people: "Person", schedule: "Schedule item" };
+const STATE_KEY = { tasks: "tasks", budget: "budget", people: "people", schedule: "schedule" };
 
 async function removeDoc(kind, id) {
   if (!canWriteNow() || !STATE_KEY[kind]) return;
@@ -1318,6 +1463,18 @@ async function removeDoc(kind, id) {
   if (await save(ref.delete())) {
     toast(`${COLLECTION_LABEL[kind]} deleted`, { undo: () => save(ref.set(copy), "Restored") });
   }
+}
+
+// swap with the neighbour, then renumber the group so equal orders can't stick
+function moveSched(id, dir) {
+  if (!canWriteNow()) return;
+  const x = state.schedule.find((y) => y.id === id);
+  if (!x) return;
+  const g = schedGroup(x), i = g.indexOf(x), j = i + dir;
+  if (j < 0 || j >= g.length) return;
+  [g[i], g[j]] = [g[j], g[i]];
+  const writes = g.map((y, n) => (Number(y.order) === (n + 1) * 10 ? null : db.collection("schedule").doc(y.id).update({ order: (n + 1) * 10 }))).filter(Boolean);
+  save(Promise.all(writes));
 }
 
 function toggleTask(id) {
@@ -1420,6 +1577,7 @@ document.addEventListener("click", (e) => {
     case "allow-gmail": allowGmail(); break;
     case "close-drill": closeDrill(); break;
     case "photo": state.photoIndex = Number(id) || 0; renderPhotos(); break;
+    case "sched-move": moveSched(id, Number(b.dataset.dir) || 0); break;
   }
 });
 
@@ -1483,6 +1641,26 @@ document.addEventListener("submit", async (e) => {
       if (!str(d.name)) return;
       ok = await save(db.collection("budget").add({ name: str(d.name), planned: num(d.planned), paid: 0, part, fund: FUNDS[d.fund] ? d.fund : "main", note: str(d.note) }), "Budget item added");
       break;
+    case "add-sched": {
+      if (!str(d.title) || !SCHEDULES[d.part]) return;
+      const group = schedGroup({ part: d.part, kind: d.kind === "week" ? "week" : "day", day: d.day });
+      const order = (group.length ? Math.max(...group.map((y) => Number(y.order) || 0)) : 0) + 10;
+      ok = await save(db.collection("schedule").add({ part: d.part, kind: d.kind === "week" ? "week" : "day", day: d.kind === "week" ? d.day || "" : "", time: str(d.time), title: str(d.title), note: str(d.note), who: "", order, createdAt: Date.now() }), "Added to the schedule");
+      break;
+    }
+    case "edit-sched": {
+      const x = state.schedule.find((y) => y.id === id);
+      if (!x) return;
+      const patch = { time: str(d.time), title: str(d.title), note: str(d.note), who: PEOPLE[d.who] ? d.who : "" };
+      // moving to another day puts it at the end of that day
+      if (x.kind === "week" && d.day && d.day !== x.day) {
+        const target = schedGroup({ part: x.part, kind: "week", day: d.day });
+        patch.day = d.day;
+        patch.order = (target.length ? Math.max(...target.map((y) => Number(y.order) || 0)) : 0) + 10;
+      }
+      ok = await save(db.collection("schedule").doc(id).update(patch), "Saved");
+      break;
+    }
     case "edit-task":
       ok = await save(db.collection("tasks").doc(id).update({ title: str(d.title), part, due: d.due || "" }), "Saved");
       break;
@@ -1624,6 +1802,7 @@ async function boot() {
 
   subscribe("tasks", "tasks");
   subscribe("budget", "budget");
+  subscribe("schedule", "schedule");
   subscribe("people", "people", { sort: (a, b) => String(a.name).localeCompare(String(b.name)) });
   db.doc("settings/main").onSnapshot((snap) => {
     state.settings = snap.exists ? { ...snap.data() } : {};

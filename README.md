@@ -8,4 +8,4 @@ Published as a Claude artifact: https://claude.ai/artifact/Xird27xUvYWHYDDxiZhJ8
 - `bg.jpg` is the background (the redwoods). `bg-blur.jpg` is a pre-blurred copy the glass surfaces show, pinned to the screen, in place of live `backdrop-filter` blur.
 - `photos/` holds the engagement photos shown in the sidebar.
 
-Tasks, budget, people and settings live in the artifact's shared database (`tasks`, `budget`, `people`, `settings/main`), not in this repo. The Inbox tab reads Gmail through the viewer's own connector, using the email addresses on the People tab.
+Tasks, budget, people, schedules and settings live in the artifact's shared database (`tasks`, `budget`, `people`, `schedule`, `settings/main`), not in this repo. The Elopement and Reception tabs each show a week-of plan and a day-of timeline from `schedule`. The Inbox tab reads Gmail through the viewer's own connector, using the email addresses on the People tab.
