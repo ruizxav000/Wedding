@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500;1,600&family=DM+Mono:wght@400&family=Jost:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@1,6..96,500&family=Cormorant+Garamond:ital,wght@1,500;1,600&family=DM+Mono:wght@400&family=Jost:wght@300;400;500;600&display=swap">
 <style>
 /* Layout: fixed glass chrome over a redwoods photo; main column beside a 284px sticky widget rail,
    collapsing to one column under 860px. Dashboard drops the rail and runs full width. */
@@ -42,6 +42,7 @@
   --edge-glow:rgba(255,255,255,.85);
   --chevron:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --f-body:"Jost",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-brand:"Bodoni Moda",Didot,"Bodoni 72",Georgia,serif;
   --f-script:"Cormorant Garamond",Georgia,"Times New Roman",serif;
   --f-mono:"DM Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --gutter:32px;
@@ -68,7 +69,7 @@ option{background:var(--menu);color:var(--ink)}
 .chrome.scrolled .chrome-bg{opacity:1}
 .chrome-inner{position:relative}
 .chrome-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:16px;padding-left:max(var(--gutter),env(safe-area-inset-left,0px));padding-right:max(var(--gutter),env(safe-area-inset-right,0px))}
-.brand{font:italic 500 1.8rem/1 var(--f-script);color:var(--ink);white-space:nowrap;letter-spacing:.01em}
+.brand{font:italic 500 1.75rem/1 var(--f-brand);color:var(--ink);white-space:nowrap;letter-spacing:.01em}
 .brand span{color:var(--gold)}
 .app-tabs{display:flex;gap:4px;align-items:center;overflow-x:auto;scrollbar-width:none}
 .app-tabs::-webkit-scrollbar{display:none}
