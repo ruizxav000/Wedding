@@ -913,9 +913,11 @@ const dayOptions = (part, selected) => schedDays(part).map((d) => `<option value
 function schedTools(x, group) {
   if (!state.canWrite) return "";
   const id = esc(x.id), i = group.indexOf(x);
+  // a missing arrow keeps its slot, so every row's tools are the same width and the pills line up
+  const gap = `<span class="icon-btn" aria-hidden="true" style="visibility:hidden"></span>`;
   return `<div class="s-tools">
-    ${i > 0 ? `<button class="icon-btn" data-action="sched-move" data-dir="-1" data-id="${id}" aria-label="Move earlier">${ICON.up}</button>` : ""}
-    ${i < group.length - 1 ? `<button class="icon-btn" data-action="sched-move" data-dir="1" data-id="${id}" aria-label="Move later">${ICON.down}</button>` : ""}
+    ${i > 0 ? `<button class="icon-btn" data-action="sched-move" data-dir="-1" data-id="${id}" aria-label="Move earlier">${ICON.up}</button>` : gap}
+    ${i < group.length - 1 ? `<button class="icon-btn" data-action="sched-move" data-dir="1" data-id="${id}" aria-label="Move later">${ICON.down}</button>` : gap}
     <button class="icon-btn" data-action="edit" data-id="sched:${id}" aria-label="Edit">${ICON.edit}</button>
     <button class="icon-btn" data-action="delete" data-kind="schedule" data-id="${id}" aria-label="Delete">${ICON.close}</button>
   </div>`;
