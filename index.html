@@ -83,6 +83,13 @@ option{background:var(--menu);color:var(--ink)}
 .app-tab{position:relative;padding:8px 15px;font-size:13px;font-weight:500;letter-spacing:.03em;color:var(--mute-faint);background:none;border:0;border-radius:8px;cursor:var(--cursor-hand);white-space:nowrap;transition:color .15s,background .15s}
 .app-tab:hover{color:var(--mute);background:var(--glass-low)}
 .app-tab[aria-current="page"]{color:var(--white);background:rgba(255,255,255,.15)}
+.app-tabs{margin-left:auto}
+/* hide/show every dollar amount, for sharing the screen on a call */
+.priv{flex:none;display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 13px;border-radius:99px;border:1px solid var(--hair);background:var(--glass-low);color:var(--mute);font-size:12.5px;font-weight:500;letter-spacing:.02em;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
+.priv:hover{background:var(--glass);color:var(--ink)}
+.priv svg{width:15px;height:15px}
+.priv[aria-pressed="true"]{background:var(--tint-gold-hi);border-color:rgba(242,196,109,.45);color:var(--gold)}
+.priv .short{display:none}
 
 /* ---------- hero ---------- */
 .hero{max-width:1200px;margin:70px auto 0;padding-top:24px;padding-bottom:6px;padding-left:max(var(--gutter),env(safe-area-inset-left,0px));padding-right:max(var(--gutter),env(safe-area-inset-right,0px))}
@@ -374,7 +381,8 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 @media (max-width:860px){
   :root{--gutter:16px}
   .chrome-inner{flex-wrap:wrap;gap:8px;padding-bottom:10px}
-  .app-tabs{width:100%}
+  .app-tabs{width:100%;order:2;margin-left:0}
+  .priv{order:1;margin-left:auto}
   .hero{margin-top:104px}
   .page{grid-template-columns:minmax(0,1fr)}
   .side{position:static}
@@ -386,6 +394,8 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 }
 @media (max-width:480px){
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .priv .long{display:none}
+  .priv .short{display:inline}
   .composer .actions{margin-left:0}
   .field.num,.field.date{flex:1 1 120px}
   .sched,.tl{padding-inline:14px}
@@ -418,6 +428,7 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
   <div class="chrome-inner">
     <span class="brand">Rachel <span>&amp;</span> Xavier</span>
     <nav class="app-tabs" id="tabs" aria-label="Sections"></nav>
+    <button class="priv" id="priv" data-action="toggle-money" aria-pressed="false"></button>
   </div>
 </header>
 
@@ -544,6 +555,8 @@ const MAIL_RETRACT = new Set(["needs_reauth","server_not_connected","blocked_by_
 const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const ICON = {
+  eye: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>',
+  eyeOff: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.3 3.7A6.6 6.6 0 0 1 8 3.5C12 3.5 14.5 8 14.5 8a11 11 0 0 1-1.9 2.4M10.1 11.9A5.6 5.6 0 0 1 8 12.5C4 12.5 1.5 8 1.5 8a11.3 11.3 0 0 1 2.6-3.1M6.6 6.6a2 2 0 0 0 2.8 2.8M2 2l12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   up: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 10l4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   down: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   check: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -567,6 +580,7 @@ const state = {
   drill: null,            // {type, key} on the dashboard
   photoIndex: 0,
   mail: { status: "off", threads: [], code: "", storedAt: 0 },
+  hideMoney: false,       // this viewer's "Hide amounts" switch
 };
 let db = null, mcp = null, uid = null;
 let mailUnwatch = null, mailQuery = null, mailInput = null;
@@ -574,14 +588,18 @@ let animateDash = false;
 let photoShown = "", photoLayer = 0;
 
 try { state.me = localStorage.getItem("wedding-hq:me") || ""; } catch (e) {}
+try { state.hideMoney = localStorage.getItem("wedding-hq:hide-money") === "1"; } catch (e) {}
 
 /* ===================== helpers ===================== */
 
 const $ = (sel) => document.querySelector(sel);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const sum = (rows, key) => rows.reduce((t, r) => t + (Number(r[key]) || 0), 0);
-const money = (n) => { const v = Number(n) || 0; return (v < 0 ? "-$" : "$") + Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }); };
-const moneyShort = (n) => { const v = Number(n) || 0; if (Math.abs(v) < 10000) return money(Math.round(v)); return "$" + (v / 1000).toFixed(v >= 100000 ? 0 : 1).replace(/\.0$/, "") + "K"; };
+const MONEY_MASK = "$•••";
+// any dollar amount written in text: $500, -$9,184, $3,866.67, $1.2K, $275/hr
+const MONEY_RE = /-?\$\s?\d[\d,]*(?:\.\d+)?(?:\s?[KkMm]\b)?/g;
+const money = (n) => { if (state.hideMoney) return MONEY_MASK; const v = Number(n) || 0; return (v < 0 ? "-$" : "$") + Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }); };
+const moneyShort = (n) => { if (state.hideMoney) return MONEY_MASK; const v = Number(n) || 0; if (Math.abs(v) < 10000) return money(Math.round(v)); return "$" + (v / 1000).toFixed(v >= 100000 ? 0 : 1).replace(/\.0$/, "") + "K"; };
 const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
 const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 const isoDay = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -1262,6 +1280,43 @@ function restoreFields({ drafts, focus }) {
   try { if (focus.start != null) el.setSelectionRange(focus.start, focus.end); } catch (e) {}
 }
 
+// Amounts from the budget already come out of money() masked; this catches the ones people typed into
+// titles, notes and facts, and the ones in email previews. Inputs holding an amount turn read-only so a
+// masked value can never be saved; drafts in the add forms are left alone.
+function maskMoney(root) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    MONEY_RE.lastIndex = 0;
+    if (MONEY_RE.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace(MONEY_RE, MONEY_MASK);
+  }
+  root.querySelectorAll("input:not([type=hidden])").forEach((el) => {
+    if (el.closest("form[data-form^='add']")) return;
+    MONEY_RE.lastIndex = 0;
+    const isAmount = el.classList.contains("num");
+    if (!isAmount && !MONEY_RE.test(el.value)) return;
+    el.value = isAmount ? "" : el.value.replace(MONEY_RE, MONEY_MASK);
+    if (isAmount) el.placeholder = "•••";
+    el.readOnly = true;
+    el.title = "Show amounts to edit";
+  });
+}
+
+function renderPriv() {
+  const b = $("#priv"), on = state.hideMoney;
+  b.setAttribute("aria-pressed", String(on));
+  b.setAttribute("aria-label", on ? "Show dollar amounts" : "Hide dollar amounts");
+  b.innerHTML = `${on ? ICON.eyeOff : ICON.eye}<span class="long">${on ? "Show amounts" : "Hide amounts"}</span><span class="short">${on ? "Show $" : "Hide $"}</span>`;
+}
+
+function toggleMoney() {
+  state.hideMoney = !state.hideMoney;
+  try { localStorage.setItem("wedding-hq:hide-money", state.hideMoney ? "1" : "0"); } catch (e) {}
+  if (state.hideMoney && /^(item|person|task|sched):/.test(state.editing)) state.editing = "";
+  if (document.activeElement && $("#main").contains(document.activeElement)) document.activeElement.blur();
+  render();
+  toast(state.hideMoney ? "Dollar amounts hidden" : "Dollar amounts showing");
+}
+
 function render() {
   const fields = captureFields();
   hideTooltip();
@@ -1274,6 +1329,8 @@ function render() {
   $("#side").hidden = wide;
   if (!wide) renderSide();
   restoreFields(fields);
+  renderPriv();
+  if (state.hideMoney) { maskMoney($("#main")); maskMoney($("#side")); }
   if (wide && animateDash) { animateDash = false; runDashAnimations(); }
 }
 
@@ -1568,7 +1625,9 @@ document.addEventListener("click", (e) => {
     case "me": setMe(id); break;
     case "toggle": toggleTask(id); break;
     case "delete": removeDoc(kind, id); break;
+    case "toggle-money": toggleMoney(); break;
     case "edit": {
+      if (state.hideMoney) { toast("Show amounts to edit"); break; }
       state.editing = id; render();
       const f = $("#main form[data-form^='edit'] input"); if (f) f.focus();
       break;
