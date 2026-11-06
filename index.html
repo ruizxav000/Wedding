@@ -1314,7 +1314,6 @@ function toggleMoney() {
   if (state.hideMoney && /^(item|person|task|sched):/.test(state.editing)) state.editing = "";
   if (document.activeElement && $("#main").contains(document.activeElement)) document.activeElement.blur();
   render();
-  toast(state.hideMoney ? "Dollar amounts hidden" : "Dollar amounts showing");
 }
 
 function render() {
