@@ -83,13 +83,6 @@ option{background:var(--menu);color:var(--ink)}
 .app-tab{position:relative;padding:8px 15px;font-size:13px;font-weight:500;letter-spacing:.03em;color:var(--mute-faint);background:none;border:0;border-radius:8px;cursor:var(--cursor-hand);white-space:nowrap;transition:color .15s,background .15s}
 .app-tab:hover{color:var(--mute);background:var(--glass-low)}
 .app-tab[aria-current="page"]{color:var(--white);background:rgba(255,255,255,.15)}
-.app-tabs{margin-left:auto}
-/* hide/show every dollar amount, for sharing the screen on a call */
-.priv{flex:none;display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 13px;border-radius:99px;border:1px solid var(--hair);background:var(--glass-low);color:var(--mute);font-size:12.5px;font-weight:500;letter-spacing:.02em;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
-.priv:hover{background:var(--glass);color:var(--ink)}
-.priv svg{width:15px;height:15px}
-.priv[aria-pressed="true"]{background:var(--tint-gold-hi);border-color:rgba(242,196,109,.45);color:var(--gold)}
-.priv .short{display:none}
 
 /* ---------- hero ---------- */
 .hero{max-width:1200px;margin:70px auto 0;padding-top:24px;padding-bottom:6px;padding-left:max(var(--gutter),env(safe-area-inset-left,0px));padding-right:max(var(--gutter),env(safe-area-inset-right,0px))}
@@ -158,6 +151,8 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 .chip{font-size:12.5px;color:var(--ink-soft);background:var(--glass-low);border:1px solid var(--hair);border-radius:99px;padding:4px 12px;cursor:var(--cursor-hand);transition:background .15s}
 .chip:hover{background:var(--glass)}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--on-accent);border-color:transparent}
+.chip.priv{display:inline-flex;align-items:center;gap:6px}
+.chip.priv svg{width:13px;height:13px}
 .chip .n{font-family:var(--f-mono);font-size:11px;opacity:.7;margin-left:5px}
 .bar{height:6px;border-radius:9px;background:var(--track);overflow:hidden}
 .bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--fern),var(--gold));transition:width .6s ease}
@@ -381,8 +376,7 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 @media (max-width:860px){
   :root{--gutter:16px}
   .chrome-inner{flex-wrap:wrap;gap:8px;padding-bottom:10px}
-  .app-tabs{width:100%;order:2;margin-left:0}
-  .priv{order:1;margin-left:auto}
+  .app-tabs{width:100%}
   .hero{margin-top:104px}
   .page{grid-template-columns:minmax(0,1fr)}
   .side{position:static}
@@ -394,8 +388,6 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
 }
 @media (max-width:480px){
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .priv .long{display:none}
-  .priv .short{display:inline}
   .composer .actions{margin-left:0}
   .field.num,.field.date{flex:1 1 120px}
   .sched,.tl{padding-inline:14px}
@@ -428,7 +420,6 @@ main > .sh:first-child,main > .notice + .sh{margin-top:10px}
   <div class="chrome-inner">
     <span class="brand">Rachel <span>&amp;</span> Xavier</span>
     <nav class="app-tabs" id="tabs" aria-label="Sections"></nav>
-    <button class="priv" id="priv" data-action="toggle-money" aria-pressed="false"></button>
   </div>
 </header>
 
@@ -1301,13 +1292,6 @@ function maskMoney(root) {
   });
 }
 
-function renderPriv() {
-  const b = $("#priv"), on = state.hideMoney;
-  b.setAttribute("aria-pressed", String(on));
-  b.setAttribute("aria-label", on ? "Show dollar amounts" : "Hide dollar amounts");
-  b.innerHTML = `${on ? ICON.eyeOff : ICON.eye}<span class="long">${on ? "Show amounts" : "Hide amounts"}</span><span class="short">${on ? "Show $" : "Hide $"}</span>`;
-}
-
 function toggleMoney() {
   state.hideMoney = !state.hideMoney;
   try { localStorage.setItem("wedding-hq:hide-money", state.hideMoney ? "1" : "0"); } catch (e) {}
@@ -1328,7 +1312,6 @@ function render() {
   $("#side").hidden = wide;
   if (!wide) renderSide();
   restoreFields(fields);
-  renderPriv();
   if (state.hideMoney) { maskMoney($("#main")); maskMoney($("#side")); }
   if (wide && animateDash) { animateDash = false; runDashAnimations(); }
 }
@@ -1347,7 +1330,7 @@ function renderSub() {
     context = fmtDay(EVENTS[state.tab].date, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   }
   const chips = ["xavier", "rachel"].map((k) => `<button class="chip" data-action="me" data-id="${k}" aria-pressed="${state.me === k}">${PEOPLE[k].name}</button>`).join("");
-  $("#hero-sub").innerHTML = `<span>${today}</span>${context ? `<span>${context}</span>` : ""}<span class="viewing" id="viewing" role="group" aria-label="Who's using this">I'm ${chips}</span>`;
+  $("#hero-sub").innerHTML = `<span>${today}</span>${context ? `<span>${context}</span>` : ""}<span class="viewing" id="viewing" role="group" aria-label="Who's using this">I'm ${chips}</span><button class="chip priv" data-action="toggle-money" aria-pressed="${state.hideMoney}">${state.hideMoney ? ICON.eyeOff + "Show amounts" : ICON.eye + "Hide amounts"}</button>`;
 }
 
 function setGreeting(fade) {
